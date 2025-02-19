@@ -1,24 +1,33 @@
-
+import Toolbar from './Toolbar';
 import React, { useEffect, useRef } from 'react';
 import  {fabric}  from 'fabric';
-console.log(fabric); // Check the console for the fabric object
 
-const Canvas = () => {
+
+const Canvas = ({ onClear }) => {
   const canvasRef = useRef(null);
+  const canvasEl = useRef(null);
 
   useEffect(() => {
     // Initialize the Fabric.js canvas
-    const canvas = new fabric.Canvas(canvasRef.current, {
+    const canvas = new fabric.Canvas(canvasEl.current, {
       isDrawingMode: true, // Enable drawing mode
       width: 800,
       height: 600,
       backgroundColor: '#f0f0f0',
     });
 
+    // Configure the drawing brush
+    canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+    canvas.freeDrawingBrush.width = 5; // Default brush size
+    canvas.freeDrawingBrush.color = '#000000'; // Default brush color
+
     // Add event listeners or other Fabric.js configurations here
     canvas.on('mouse:up', () => {
       console.log('Drawing stopped');
     });
+
+     // Store the canvas instance in a ref for later use
+     canvasRef.current = canvas;
 
     // Cleanup on component unmount
     return () => {
@@ -26,9 +35,26 @@ const Canvas = () => {
     };
   }, []);
 
+   
+   const onSave = () => {
+    console.log('Save functionality');
+  };
+
+   // Handle the clear button click
+   const handleClear = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.clear();
+    }
+    if (onClear) {
+      onClear(); 
+    }
+  };
+
   return (
     <div>
-      <canvas ref={canvasRef} id="canvas" />
+      <canvas ref={canvasEl} id="canvas" width={800} height={600} />
+      <Toolbar onClear={handleClear} onSave={onSave} /> 
     </div>
   );
 };

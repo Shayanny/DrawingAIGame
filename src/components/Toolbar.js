@@ -1,8 +1,10 @@
-const Toolbar = () => {
+import React from 'react';
+
+const Toolbar = ({ onClear, onSave }) => {
     return (
-      <div className="flex gap-4 p-2">
-        <button className="px-4 py-2 bg-blue-500 text-white rounded">Clear</button>
-        <button className="px-4 py-2 bg-green-500 text-white rounded">Save</button>
+      <div >
+       <button onClick={onClear}>Clear</button>
+       <button onClick={onSave}>Save</button>
       </div>
     );
   };

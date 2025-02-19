@@ -39,6 +39,21 @@
 
 Canvas {
   border: 2px solid #000; 
-  margin: 20px auto; 
-  display: block; 
+  margin: 20px auto;
+  display: block;
+}
+
+button {
+  margin-right: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: #0056b3;
 }
