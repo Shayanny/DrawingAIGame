@@ -1,4 +1,4 @@
-import logo from './logo.svg';
+
 import './App.css';
 import Canvas from "./components/Canvas";
 import Toolbar from "./components/Toolbar";
