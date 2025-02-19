@@ -1,0 +1,23 @@
+
+.toolbar-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-top: 40px;  /* Space above the buttons */
+  }
+  
+  .toolbar-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50; /* Green color for the buttons */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .toolbar-button:hover {
+    background-color: #45a049; /* Darker green when hovering */
+  }
+  
