@@ -1,0 +1,60 @@
+/* General styling for the menu */
+.main-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+  }
+  
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 40px;
+    color: #333;
+  }
+  
+  nav {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .menu-button {
+    background-color: #007bff;
+    color: white;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    text-decoration: none;
+  }
+  
+  .menu-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+    text-decoration: underline;
+  }
+  
+  .menu-button:active {
+    background-color: #003f7f;
+  }
+  
+  @media (max-width: 600px) {
+    .main-menu {
+      padding: 20px;
+    }
+    
+    nav {
+      gap: 15px;
+    }
+  
+    .menu-button {
+      font-size: 1rem;
+      padding: 12px 25px;
+    }
+  }
+  
