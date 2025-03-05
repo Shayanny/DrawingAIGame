@@ -1,6 +1,6 @@
 import Toolbar from './Toolbar';
 import React, { useEffect, useRef } from 'react';
-import  {fabric}  from 'fabric';
+import { fabric } from 'fabric';
 
 
 const Canvas = ({ onClear }) => {
@@ -26,8 +26,8 @@ const Canvas = ({ onClear }) => {
       console.log('Drawing stopped');
     });
 
-     // Store the canvas instance in a ref for later use
-     canvasRef.current = canvas;
+    // Store the canvas instance in a ref for later use
+    canvasRef.current = canvas;
 
     // Cleanup on component unmount
     return () => {
@@ -35,26 +35,54 @@ const Canvas = ({ onClear }) => {
     };
   }, []);
 
-   
-   const onSave = () => {
-    console.log('Save functionality');
+  const onSave = async () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      // Get the image data URL of the canvas
+      const dataURL = canvas.toDataURL({
+        format: 'png',
+      });
+
+      // Send the image to the backend for prediction
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image: dataURL, // Send the canvas image as base64
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send image for prediction');
+        }
+
+        const prediction = await response.json();
+        console.log('Prediction result:', prediction);
+      } catch (error) {
+        console.error('Error sending image for prediction:', error);
+      }
+    }
   };
 
-   // Handle the clear button click
-   const handleClear = () => {
+
+  // Handle the clear button click
+  const handleClear = () => {
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.clear();
     }
     if (onClear) {
-      onClear(); 
+      onClear();
     }
   };
 
   return (
     <div>
       <canvas ref={canvasEl} id="canvas" width={800} height={600} />
-      <Toolbar onClear={handleClear} onSave={onSave} /> 
+      <Toolbar onClear={handleClear} onSave={onSave} />
     </div>
   );
 };
