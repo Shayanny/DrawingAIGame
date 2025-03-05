@@ -3,6 +3,9 @@ const multer = require('multer');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors');
+require('dotenv').config();
+
 
 // Initialize Express app
 const app = express();
@@ -12,8 +15,8 @@ const port = 3000;
 const upload = multer({ storage: multer.memoryStorage() });
 
 
-const HF_API_TOKEN = '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';
-const HF_MODEL_URL = 'https://api-inference.huggingface.co/models/google/quickdraw';
+const HF_API_TOKEN = process.env.HF_API_TOKEN;
+const HF_MODEL_URL = 'https://api-inference.huggingface.co/models/gyrojeff/Hyperstroke-VQ-Quickdraw';
 
 // Handle POST requests to '/predict' endpoint
 app.post('/predict', upload.single('image'), async (req, res) => {
@@ -48,6 +51,8 @@ app.post('/predict', upload.single('image'), async (req, res) => {
         res.status(500).json({ error: 'Error during prediction.' });
     }
 });
+
+app.use(cors());
 
 // Start the Express server
 app.listen(port, () => {
