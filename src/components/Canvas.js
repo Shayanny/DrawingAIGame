@@ -47,7 +47,7 @@ const Canvas = ({ onClear }) => {
             formData.append('image', blob, 'drawing.png');
 
             try {
-                const response = await fetch('http://localhost:3000/upload', {
+                const response = await fetch('http://localhost:3000/analyze_image', {
                     method: 'POST',
                     body: formData, // Send the form data directly
                 });
