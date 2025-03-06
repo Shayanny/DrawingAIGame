@@ -1,8 +1,12 @@
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from io import BytesIO
+from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
 import uvicorn
+import base64
+from PIL import Image
 
 app = FastAPI()
 
@@ -17,22 +21,52 @@ client = OpenAI(
   api_key= api_token,
 )
 
-completion = client.chat.completions.create(
-  extra_headers={
-    "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
-    "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
-  },
-  model="deepseek/deepseek-r1-distill-llama-70b:free",
-  messages=[
-    {
-      "role": "user",
-      "content": "What is the meaning of cooking?"
-    }
-  ]
-)
+# Define request models
+class ChatRequest(BaseModel):
+    user_input: str
 
-print(completion)
-print(completion.choices[0].message.content)
+class ImageRequest(BaseModel):
+    image: str  # Base64-encoded image
+
+
+@app.post("/chat")
+async def chat(user_input: str):
+    completion = client.chat.completions.create(
+        model="deepseek/deepseek-r1-distill-llama-70b:free",
+        messages=[{"role": "user", "content": user_input}]
+    )
+    return {"response": completion.choices[0].message.content}
+
+# Image Analysis API
+@app.post("/analyze_image")
+async def analyze_image(request: ImageRequest):
+    try:
+        # Extract base64 image from request
+        image_data = request.image.split(",")[1]  # Remove the "data:image/png;base64," part
+        image_bytes = base64.b64decode(image_data)
+        
+        # Load the image using PIL (Pillow)
+        image = Image.open(BytesIO(image_bytes))
+
+        # Generate a descriptive prompt based on the image (you can customize this logic)
+        prompt = "Describe the contents of this image."
+
+        # Send the prompt to OpenAI Deepseek model for analysis
+        response = OpenAI.Completion.create(
+            model="deepseek/deepseek-r1-distill-llama-70b:free",
+            prompt=prompt,
+            max_tokens=150  # Adjust the max tokens as needed
+        )
+        
+        # Get the result from OpenAI
+        result = response.choices[0].text.strip()
+
+        return {"prediction": result}
+
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Error processing image: " + str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

@@ -38,34 +38,29 @@ const Canvas = ({ onClear }) => {
   const onSave = async () => {
     const canvas = canvasRef.current;
     if (canvas) {
-      // Get the image data URL of the canvas
-      const dataURL = canvas.toDataURL({
-        format: 'png',
-      });
+        const dataURL = canvas.toDataURL({ format: 'png' });
 
-      // Send the image to the backend for prediction
-      try {
-        const response = await fetch('http://localhost:3000/predict', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image: dataURL, // Send the canvas image as base64
-          }),
-        });
+        try {
+            const response = await fetch('http://localhost:3000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataURL }),
+            });
 
-        if (!response.ok) {
-          throw new Error('Failed to send image for prediction');
+            if (!response.ok) {
+                throw new Error('Failed to send image for prediction');
+            }
+
+            const prediction = await response.json();
+            console.log('Prediction result:', prediction);
+
+            // Display prediction result in the UI
+            alert(`AI Prediction: ${JSON.stringify(prediction)}`);
+        } catch (error) {
+            console.error('Error sending image for prediction:', error);
         }
-
-        const prediction = await response.json();
-        console.log('Prediction result:', prediction);
-      } catch (error) {
-        console.error('Error sending image for prediction:', error);
-      }
     }
-  };
+};
 
 
   // Handle the clear button click
