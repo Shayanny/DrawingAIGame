@@ -11,11 +11,18 @@ require('dotenv').config();
 const app = express();
 const port = 3000;
 
+//Python backend
+const PYTHON_API_URL = 'http://localhost:8000/generate';
+
 app.use(cors({
-    origin: 'http://localhost:3001',  // Your React frontend URL
-    methods: ['GET', 'POST'],
+    origin: 'http://localhost:3001',  
+    methods: ['GET', 'POST', 'FETCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
+
+app.use(express.json({ limit: '10mb' }));  // Allows JSON parsing
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Allows form data parsing
+
 
 // Set up multer to handle image uploads
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 }, });
@@ -30,45 +37,41 @@ app.get('/', (req, res) => {
   });
   
 
-// Handle POST requests to '/predict' endpoint
-app.post('/predict', async (req, res) => {
-    // Ensure that the image is in the body
-    const { image } = req.body;
+
+  app.post('/predict', async (req, res) => {
+    const { messages } = req.body;
   
-    if (!image) {
-      return res.status(400).json({ error: 'No image sent for prediction.' });
+    // Check if messages exist in the request body
+    if (!messages) {
+      return res.status(400).send('Messages not found');
     }
   
     try {
-      // Decode the base64 image string to a buffer
-      const base64Data = image.split(',')[1]; // Remove the "data:image/png;base64," part
-      const buffer = Buffer.from(base64Data, 'base64');
+      const response = await fetch(PYTHON_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages,
+        }),
+      });
   
-      // Send the buffer to Hugging Face API for prediction
-      const response = await axios.post(
-        HF_MODEL_URL,
-        buffer,
-        {
-          headers: {
-            'Authorization': `Bearer ${HF_API_TOKEN}`,
-            'Content-Type': 'application/octet-stream',
-          },
-        }
-      );
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
   
-      const prediction = response.data;
-  
-      // Return the prediction to the client
-      res.json(prediction);
+      const data = await response.json();
+      res.json(data);  // Send back the response from the Python backend
     } catch (error) {
-      console.error('Error during prediction:', error);
-      res.status(500).json({ error: 'Error during prediction.' });
+      console.error('Error with Python API:', error);
+      res.status(500).send('Error with Python API');
     }
   });
-  
 
 
 // Start the Express server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+

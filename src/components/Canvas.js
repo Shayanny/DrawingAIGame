@@ -45,7 +45,7 @@ const Canvas = ({ onClear }) => {
 
       // Send the image to the backend for prediction
       try {
-        const response = await fetch('/predict', {
+        const response = await fetch('http://localhost:3000/predict', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
