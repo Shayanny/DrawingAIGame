@@ -38,29 +38,36 @@ const Canvas = ({ onClear }) => {
   const onSave = async () => {
     const canvas = canvasRef.current;
     if (canvas) {
-        const dataURL = canvas.toDataURL({ format: 'png' });
+        // Get the raw HTML canvas element from the Fabric.js canvas
+        const rawCanvas = canvas.getElement();
 
-        try {
-            const response = await fetch('http://localhost:3000/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: dataURL }),
-            });
+        // Now you can use toBlob on the raw HTML canvas
+        rawCanvas.toBlob(async (blob) => {
+            const formData = new FormData();
+            formData.append('image', blob, 'drawing.png');
 
-            if (!response.ok) {
-                throw new Error('Failed to send image for prediction');
+            try {
+                const response = await fetch('http://localhost:3000/upload', {
+                    method: 'POST',
+                    body: formData, // Send the form data directly
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to send image for prediction');
+                }
+
+                const prediction = await response.json();
+                console.log('Prediction result:', prediction);
+
+                // Display prediction result in the UI
+                alert(`AI Prediction: ${JSON.stringify(prediction)}`);
+            } catch (error) {
+                console.error('Error sending image for prediction:', error);
             }
-
-            const prediction = await response.json();
-            console.log('Prediction result:', prediction);
-
-            // Display prediction result in the UI
-            alert(`AI Prediction: ${JSON.stringify(prediction)}`);
-        } catch (error) {
-            console.error('Error sending image for prediction:', error);
-        }
+        }, 'image/png');
     }
 };
+
 
 
   // Handle the clear button click

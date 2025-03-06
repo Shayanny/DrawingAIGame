@@ -12,7 +12,7 @@ const app = express();
 const port = 3000;
 
 //Python backend
-const PYTHON_API_URL = 'http://localhost:8000/analyze_image';
+const PYTHON_API_URL = 'http://127.0.0.1:8000/analyze_image';
 
 app.use(cors({
     origin: 'http://localhost:3001',  
@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: '100mb' })); // Allows form 
 
 
 // Set up multer to handle image uploads
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 }, });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 }, });
 
 
 // Add a default route to handle GET requests to the root URL
@@ -33,29 +33,30 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
   });
   
-  app.post('/predict', async (req, res) => {
-    const { image } = req.body;  // Get the base64 image from the request
-  
-    if (!image) {
-      return res.status(400).json({ error: 'No image provided' });
-    }
-
+  app.post('/upload', upload.single('image'), async (req, res) => {
     try {
-       // Send the image to the FastAPI AI server
-       const response = await axios.post(
-        'http://localhost:8000/analyze_image',
-        { image },
-        {
-            headers: { 'Content-Type': 'application/json' }
-        }
-        
-      );
-
-        // Return the AI's response
-        res.json(response.data);
+      if (!req.file) {
+        return res.status(400).send('No file uploaded');
+      }
+  
+      // The uploaded image is in memory, stored in req.file.buffer
+      const imageBuffer = req.file.buffer;
+      console.log('Uploaded image buffer received:', imageBuffer);
+  
+      // Send the image to the external API for analysis (or perform any other processing)
+      const response = await axios.post('http://127.0.0.1:8000/analyze_image', {
+        image: imageBuffer.toString('base64'), // Send the image in base64 format
+      });
+  
+      console.log('API Response:', response.data);
+  
+      res.json({
+        message: 'Image processed successfully!',
+        data: response.data,
+      });
     } catch (error) {
-        console.error('Error sending image to Deepseek:', error);
-        res.status(500).json({ error: 'Error processing image' });
+      console.error('Error processing image:', error);
+      res.status(500).send('Error processing image');
     }
 });
 
