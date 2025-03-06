@@ -44,7 +44,15 @@ app.get('/', (req, res) => {
 // Chat API Endpoint
 app.post("/chat", async (req, res) => {
   try {
+
+    console.log("Received request:", req.body); 
+
     const { user_input } = req.body;
+
+    if (!image) {
+      console.error("No image received");
+      return res.status(400).json({ error: "No image received" });
+    }
 
     const response = await client.chat.completions.create({
       model: "deepseek/deepseek-r1-distill-llama-70b:free",
@@ -59,22 +67,21 @@ app.post("/chat", async (req, res) => {
 });
 
 // Image Analysis API Endpoint
-app.post("/analyze_image", upload.single("image"), async (req, res) => {
+app.post("/analyze_image", async (req, res) => {
+  
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No image uploaded" });
+    const { image } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ error: "No image received" });
     }
-
-    // Convert image buffer to Base64 string
-    const base64Image = `data:image/png;base64,${req.file.buffer.toString("base64")}`;
-
     // Construct messages for DeepSeek vision model
     const messages = [
       {
         role: "user",
         content: [
           { type: "text", text: "What is shown in this drawing? Give a simple but detailed description." },
-          { type: "image_url", image_url: { url: `data:image/png;base64,${base64Image}` } },
+          { type: "image_url", image_url: { url: image}},
         ],
       },
     ];
@@ -86,17 +93,15 @@ app.post("/analyze_image", upload.single("image"), async (req, res) => {
       max_tokens: 300,
     });
 
-    let prediction = response.choices[0].message.content;
-
-    // If content is an object/array, convert it to a readable string
-    if (typeof prediction === "object") {
-      prediction = JSON.stringify(prediction, null, 2); // Format the JSON for better readability
-    }
-
-    res.json({ prediction });
+    res.json({ prediction: response.choices[0]?.message?.content || "No prediction available" });
+  
   } catch (error) {
     console.error("Image Processing Error:", error);
-    res.status(400).json({ error: `Error processing image: ${error.message}` });
+     // Ensure error response is sent only ONCE
+     if (!res.headersSent) { 
+      return res.status(500).json({ error: `Error processing image: ${error.message}` });
+    }
+    
   }
 });
 

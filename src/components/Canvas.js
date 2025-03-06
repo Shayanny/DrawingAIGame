@@ -38,35 +38,34 @@ const Canvas = ({ onClear }) => {
   const onSave = async () => {
     const canvas = canvasRef.current;
     if (canvas) {
-        // Get the raw HTML canvas element from the Fabric.js canvas
-        const rawCanvas = canvas.getElement();
+      // Get the raw HTML canvas element from the Fabric.js canvas
+      const rawCanvas = canvas.getElement();
+      // Convert canvas to a Base64 string
+      const base64Image = rawCanvas.toDataURL("image/png"); // PNG format
 
-        // Now you can use toBlob on the raw HTML canvas
-        rawCanvas.toBlob(async (blob) => {
-            const formData = new FormData();
-            formData.append('image', blob, 'drawing.png');
 
-            try {
-                const response = await fetch('http://localhost:3000/analyze_image', {
-                    method: 'POST',
-                    body: formData, // Send the form data directly
-                });
+      try {
+        const response = await fetch('http://localhost:3000/analyze_image', {
+          method: 'POST',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64Image }), // Send the form data directly
+        });
 
-                if (!response.ok) {
-                    throw new Error('Failed to send image for prediction');
-                }
+        if (!response.ok) {
+          throw new Error('Failed to send image for prediction');
+        }
 
-                const prediction = await response.json();
-                console.log('Prediction result:', prediction);
+        const prediction = await response.json();
+        console.log('Prediction result:', prediction);
 
-                // Display prediction result in the UI
-                alert(`AI Prediction: ${JSON.stringify(prediction)}`);
-            } catch (error) {
-                console.error('Error sending image for prediction:', error);
-            }
-        }, 'image/png');
+        // Display prediction result in the UI
+        alert(`AI Prediction: ${JSON.stringify(prediction)}`);
+      } catch (error) {
+        console.error('Error sending image for prediction:', error);
+      }
+
     }
-};
+  };
 
 
 
@@ -74,8 +73,11 @@ const Canvas = ({ onClear }) => {
   const handleClear = () => {
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.clear();
+      canvas.clear(); //  Clear all Fabric.js objects
+      canvas.backgroundColor = "#FFFFFF"; // ✅ Set permanent white background
+      canvas.renderAll(); // ✅ Force refresh
     }
+
     if (onClear) {
       onClear();
     }
