@@ -17,10 +17,10 @@ const port = 3000;
 const apiToken = process.env.OP_API_KEY;
 
 app.use(cors({
-    origin: 'http://localhost:3001',  
-    methods: ['GET', 'POST', 'FETCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }));
+  origin: 'http://localhost:3001',
+  methods: ['GET', 'POST', 'FETCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Initialize OpenAI client with OpenRouter
 const client = new OpenAi({
@@ -38,8 +38,8 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 
 // Add a default route to handle GET requests to the root URL
 app.get('/', (req, res) => {
-    res.send('Hello World!');
-  });
+  res.send('Hello World!');
+});
 
 // Chat API Endpoint
 app.post("/chat", async (req, res) => {
@@ -59,14 +59,14 @@ app.post("/chat", async (req, res) => {
 });
 
 // Image Analysis API Endpoint
-app.post("/analyze_image", async (req, res) => {
+app.post("/analyze_image", upload.single("image"), async (req, res) => {
   try {
-    let { image } = req.body;
-
-    // Remove "data:image/png;base64," if present
-    if (image.includes(",")) {
-      image = image.split(",")[1];
+    if (!req.file) {
+      return res.status(400).json({ error: "No image uploaded" });
     }
+
+    // Convert image buffer to Base64 string
+    const base64Image = `data:image/png;base64,${req.file.buffer.toString("base64")}`;
 
     // Construct messages for DeepSeek vision model
     const messages = [
@@ -74,58 +74,35 @@ app.post("/analyze_image", async (req, res) => {
         role: "user",
         content: [
           { type: "text", text: "What is shown in this drawing? Give a simple but detailed description." },
-          { type: "image_url", image_url: { url: `data:image/png;base64,${image}` } },
+          { type: "image_url", image_url: { url: `data:image/png;base64,${base64Image}` } },
         ],
       },
     ];
 
     // Send request to DeepSeek Vision model
     const response = await client.chat.completions.create({
-      model: "deepseek/deepseek-vis-7b-chat:free",
+      model: "qwen/qwen2.5-vl-72b-instruct:free",
       messages: messages,
       max_tokens: 300,
     });
 
-    res.json({ prediction: response.choices[0].message.content });
+    let prediction = response.choices[0].message.content;
+
+    // If content is an object/array, convert it to a readable string
+    if (typeof prediction === "object") {
+      prediction = JSON.stringify(prediction, null, 2); // Format the JSON for better readability
+    }
+
+    res.json({ prediction });
   } catch (error) {
     console.error("Image Processing Error:", error);
     res.status(400).json({ error: `Error processing image: ${error.message}` });
   }
 });
-  
-  app.post('/upload', upload.single('image'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).send('No file uploaded');
-      }
-  
-      // The uploaded image is in memory, stored in req.file.buffer
-      const imageBuffer = req.file.buffer;
-      console.log('Uploaded image buffer received:', imageBuffer);
-  
-      // Send the image to the external API for analysis (or perform any other processing)
-      const response = await axios.post('http://127.0.0.1:8000/analyze_image', {
-        image: imageBuffer.toString('base64'), // Send the image in base64 format
-      });
-  
-      console.log('API Response:', response.data);
-  
-      res.json({
-        message: 'Image processed successfully!',
-        data: response.data,
-      });
-    } catch (error) {
-      console.error('Error processing image:', error);
-      res.status(500).send('Error processing image');
-    }
-});
-
-
-  
 
 
 // Start the Express server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
 
