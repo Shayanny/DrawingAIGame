@@ -2,30 +2,32 @@ import React, { useState } from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import GameOptions from "./GameOptions";
 import Settings from "./Settings";
+import { useNavigate } from "react-router-dom";
 import AccountPopup from "./AccountPopup";
 import "./MainMenu.css"; // Add CSS later for styling
 
 function MainMenu() {
   const [showAccountPopup, setShowAccountPopup] = useState(false);
+  const navigate = useNavigate();
+
 
   return (
-    <Router>
-      <div className="main-menu">
-        <h1>AI Drawing Game</h1>
-        <nav>
-          <Link to="/game-options" className="menu-button">Play Now</Link>
-          <button className="menu-button" onClick={() => setShowAccountPopup(true)}>My Account</button>
-          <Link to="/settings" className="menu-button">Settings</Link>
-        </nav>
-        
-        {showAccountPopup && <AccountPopup onClose={() => setShowAccountPopup(false)} />}
+    <div className="menu-container">
+      <h1 className="title">AI Drawing Game</h1>
+      <div className="menu-buttons">
+        <button className="menu-button red" onClick={() => navigate("/game")}>
+          Play Now
+        </button>
+        <button className="menu-button yellow" onClick={() => setShowAccountPopup(true)}>
+          My Account
+        </button>
+        <Link to="/settings" className="menu-button green">
+          Settings
+        </Link>
       </div>
-      
-      <Routes>
-        <Route path="/game-options" element={<GameOptions />} />
-        <Route path="/settings" element={<Settings />} />
-      </Routes>
-    </Router>
+
+      {showAccountPopup && <AccountPopup onClose={() => setShowAccountPopup(false)} />}
+    </div>
   );
 }
 
