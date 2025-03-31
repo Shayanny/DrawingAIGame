@@ -1,6 +1,7 @@
 import Toolbar from './Toolbar';
 import React, { useEffect, useRef } from 'react';
 import { fabric } from 'fabric';
+import './Canvas.css'; 
 
 
 const Canvas = ({ onClear }) => {
@@ -84,7 +85,7 @@ const Canvas = ({ onClear }) => {
   };
 
   return (
-    <div>
+    <div className="canvas-container">
       <canvas ref={canvasEl} id="canvas" width={800} height={600} />
       <Toolbar onClear={handleClear} onSave={onSave} />
     </div>

@@ -13,7 +13,9 @@ function MainMenu() {
 
   return (
     <div className="menu-container">
-      <h1 className="title">AI Drawing Game</h1>
+       <div className="top-green-bar">
+      <h1 className="title">Draw AI</h1>
+      </div>
       <div className="menu-buttons">
         <button className="menu-button red" onClick={() => navigate("/game")}>
           Play Now
@@ -21,9 +23,9 @@ function MainMenu() {
         <button className="menu-button yellow" onClick={() => setShowAccountPopup(true)}>
           My Account
         </button>
-        <Link to="/settings" className="menu-button green">
-          Settings
-        </Link>
+        <button className="menu-button green" onClick={() => navigate("/settings")}>
+         Settings
+        </button>
       </div>
 
       {showAccountPopup && <AccountPopup onClose={() => setShowAccountPopup(false)} />}
