@@ -14,8 +14,8 @@ require('dotenv').config();
 const app = express();
 const port = 3000;
 
-const apiToken = process.env.OP_API_KEY;
-const DAapiToken = process.env.DA_API_KEY;
+const apiToken = process.env.OP_API_TOKEN;
+//const DAapiToken = process.env.DA_API_KEY;
 
 app.use(cors({
   origin: 'http://localhost:3001',
