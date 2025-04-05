@@ -81,7 +81,7 @@ app.post("/analyze_image", async (req, res) => {
       {
         role: "user",
         content: [
-          { type: "text", text: "What is shown in this drawing? Give a simple but detailed description." },
+          { type: "text", text: "What is shown in this drawing? Give as few words as possible" },
           { type: "image_url", image_url: { url: image}},
         ],
       },

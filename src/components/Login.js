@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { auth, signInWithGoogle, signUpWithEmail, signInWithEmail, logOut } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import "./Login.css";
 
-const Login = () => {
+
+const Login = ({ onBack }) => {
   const [user, setUser] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,30 +19,32 @@ const Login = () => {
   }, []);
 
   return (
-    <div>
+    <div className="login-container">
+      <button className="login-button back" onClick={onBack}>Back</button>
       {user ? (
-        <div>
+        <div className="login-logged-in">
           <p>Welcome, {user.email}!</p>
-          <button onClick={logOut}>Logout</button>
+          <button className="login-button" onClick={logOut}>Logout</button>
         </div>
       ) : (
-        <div>
-          <h2>Login</h2>
-          <input 
-            type="email" 
-            placeholder="Email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
+        <div className="login-form">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="login-input"
           />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="login-input"
           />
-          <button onClick={() => signInWithEmail(email, password)}>Login</button>
-          <button onClick={() => signUpWithEmail(email, password)}>Sign Up</button>
-          <button onClick={signInWithGoogle}>Login with Google</button>
+          <button className="login-button" onClick={() => signInWithEmail(email, password)}>Login</button>
+          <button className="login-button" onClick={() => signUpWithEmail(email, password)}>Sign Up</button>
+          <button className="login-button google" onClick={signInWithGoogle}>Login with Google</button>
         </div>
       )}
     </div>
