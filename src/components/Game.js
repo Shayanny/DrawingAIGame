@@ -4,20 +4,22 @@ import GameOptions from "./GameOptions";
 import Settings from "./Settings";
 import { useNavigate } from "react-router-dom";
 import Canvas from "./Canvas";
-
-import "./Game.css"; // Add CSS later for styling
+import "./Game.css"; 
 
 function Game() {
-  const navigate = useNavigate();
+  
+    const navigate = useNavigate(); 
+
+    const handleBack = () => {
+      navigate(-1); // Go back to the previous page
+    };
 
   return (
     <div className="game-container">
-       <div className="top-green-bar">
-      <h1 className="title">Draw AI</h1>
-      </div>
+    <button className="back-arrow" onClick={handleBack}>
+        ← 
+      </button>
       <Canvas/>
-
-  
     </div>
   );
 }

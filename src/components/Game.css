@@ -49,5 +49,24 @@
     position: relative; /* This ensures the canvas stays above the background */
     z-index: 1; /* Ensure canvas stays above the background image */
   }
+
+  .back-arrow {
+    position: absolute; /* Position it relative to the container */
+    top: 20px;          /* Adjust as needed */
+    left: 20px;         /* Adjust as needed */
+    background: transparent; /* No background */
+    border: none;           /* No border */
+    font-size: 30px;         /* Make the arrow bigger */
+    color: #fff;            /* White color for the arrow */
+    cursor: pointer;        /* Pointer cursor on hover */
+    padding: 10px;           /* Some padding for click area */
+    z-index: 10;            /* Ensure it stays above other content */
+  }
+  
+  .back-arrow:hover {
+    color: #ff6a00; /* Change color on hover, for example */
+  }
+  
+  
   
     
