@@ -1,0 +1,53 @@
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    --background: linear-gradient(to bottom, #a8e063, #ff6a00, #00c3ff);
+    text-align: center;
+    position: relative;
+  }
+  
+  .game-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('img/image 1.png'); /* Add your image path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+    opacity: 1; /* Adjust transparency (0-1) */
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+  }
+  
+  .top-green-bar {
+    width: 100%;
+    height: 150px; /* Adjust thickness as needed */
+    background-color: rgba(76, 175, 80, 0.5); /* Green with 50% opacity */
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .canvas-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: relative; /* This ensures the canvas stays above the background */
+    z-index: 1; /* Ensure canvas stays above the background image */
+  }
+  
+    
