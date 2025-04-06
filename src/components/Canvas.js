@@ -1,5 +1,5 @@
 import Toolbar from './Toolbar';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef , useState} from 'react';
 import { fabric } from 'fabric';
 import './Canvas.css'; 
 
@@ -7,6 +7,21 @@ import './Canvas.css';
 const Canvas = ({ onClear }) => {
   const canvasRef = useRef(null);
   const canvasEl = useRef(null);
+
+  const [prediction, setPrediction] = useState("");
+  const [thinking, setThinking] = useState(false);
+
+  const thinkingMessages = [
+    "Just a moment...",
+    "Let me think...",
+    "Hmm...",
+    "Analyzing masterpiece...",
+    "Interpreting your art...",
+    "This is deep..."
+  ];
+
+  const getRandomThinkingMessage = () =>
+    thinkingMessages[Math.floor(Math.random() * thinkingMessages.length)];
 
   useEffect(() => {
     // Initialize the Fabric.js canvas
@@ -39,6 +54,10 @@ const Canvas = ({ onClear }) => {
   const onSave = async () => {
     const canvas = canvasRef.current;
     if (canvas) {
+
+      setThinking(true);
+      setPrediction(getRandomThinkingMessage());
+
       // Get the raw HTML canvas element from the Fabric.js canvas
       const rawCanvas = canvas.getElement();
       // Convert canvas to a Base64 string
@@ -56,13 +75,13 @@ const Canvas = ({ onClear }) => {
           throw new Error('Failed to send image for prediction');
         }
 
-        const prediction = await response.json();
-        console.log('Prediction result:', prediction);
-
-        // Display prediction result in the UI
-        alert(`AI Prediction: ${JSON.stringify(prediction)}`);
+        const result = await response.text(); // <-- text now, not JSON
+        setPrediction(result);
       } catch (error) {
         console.error('Error sending image for prediction:', error);
+        setPrediction("Error predicting. Try again!");
+      } finally {
+        setThinking(false);
       }
 
     }
@@ -78,7 +97,8 @@ const Canvas = ({ onClear }) => {
       canvas.backgroundColor = "#FFFFFF"; // ✅ Set permanent white background
       canvas.renderAll(); // ✅ Force refresh
     }
-
+    
+    setPrediction("");
     if (onClear) {
       onClear();
     }
@@ -86,6 +106,15 @@ const Canvas = ({ onClear }) => {
 
   return (
     <div className="canvas-container">
+      <div className="scoreboard">
+      {thinking ? (
+        <h2>{prediction}</h2> 
+      ) : prediction ? (
+        <h2>Prediction: {prediction}</h2>
+      ) : (
+        <h2>Draw something and click Save!</h2>
+      )}
+      </div>
       <canvas ref={canvasEl} id="canvas" width={800} height={600} />
       <Toolbar onClear={handleClear} onSave={onSave} />
     </div>

@@ -94,7 +94,7 @@ app.post("/analyze_image", async (req, res) => {
       max_tokens: 300,
     });
 
-    res.json({ prediction: response.choices[0]?.message?.content || "No prediction available" });
+    res.json( response.choices[0]?.message?.content || "No prediction available" );
   
   } catch (error) {
     console.error("Image Processing Error:", error);
