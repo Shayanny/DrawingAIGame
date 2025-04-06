@@ -47,15 +47,32 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
+    align-items: center; /* center them horizontally */
+    margin-top: 10px;
   }
   
-  .popup-button,
+  .popup-button{
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    background-color: #4285f4;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    width: 200px;
+    text-align: center;
+    transition: background-color 0.3s;
+  }
+
   .popup-close {
     padding: 12px;
     font-size: 1.1rem;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
+    margin-top: 10px;
     border: none;
   }
   
@@ -72,5 +89,14 @@
   
   .popup-close:hover {
     background-color: #d32f2f;
+  }
+
+  .popup-input {
+    padding: 8px;
+    margin-bottom: 10px;
+    width: 100%;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
   }
   
