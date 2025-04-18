@@ -1,65 +1,60 @@
 .canvas-container {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100vh;
-    gap: 20px;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 1;
-}
-
-#canvas {
-    border: 1px solid #ccc;
-    /* Optional border */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    /* Optional shadow */
-    margin-top: 20px; 
-}
-
-.canvas-responsive {
-    max-width: 100%;
-    height: auto !important;
-    width: auto !important;
-}
-
-.scoreboard {
+    gap: 10px;
     width: 800px;
+    margin: 0 auto;
+  }
+  
+  .scoreboard {
+    width: 100%;
     background: #1e90ff;
     color: white;
     text-align: center;
     padding: 12px;
     border-radius: 8px;
-    margin-bottom: 10px;
-    font-family: 'Segoe UI', sans-serif;
     font-size: 18px;
+    font-family: 'Segoe UI', sans-serif;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   }
-
-  .prediction-text {
-    animation: fadeIn 0.5s ease-in-out;
-  }
-
-  .sidebar-timer {
-    text-align: right;
-    font-size: 1.2rem;
-    font-weight: bold;
-  }
-
-  .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 90%;
-    max-width: 1000px;
-    margin-bottom: 10px;
+  
+  .start-overlay,
+  .countdown-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    pointer-events: none;
   }
   
-  
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  .start-button {
+    pointer-events: auto;
+    padding: 16px 32px;
+    font-size: 1.5rem;
+    background-color: #1e90ff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
   }
+  
+  .countdown-overlay h1 {
+    font-size: 5rem;
+    color: #333;
+    animation: fadeInScale 0.4s ease;
+  }
+  
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  

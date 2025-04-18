@@ -3,169 +3,175 @@ import React, { useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import './CanvasTheme.css';
 
-
 const CanvasTheme = ({ onClear }) => {
-    const canvasRef = useRef(null);
-    const canvasEl = useRef(null);
+  const canvasRef = useRef(null);
+  const canvasEl = useRef(null);
 
-    const [prediction, setPrediction] = useState("");
-    const [thinking, setThinking] = useState(false);
-    const [themeMode, setThemeMode] = useState(false);
-    const [currentTheme, setCurrentTheme] = useState("");
-    const [countdown, setCountdown] = useState(0);
-    const [submissionCount, setSubmissionCount] = useState(0);
+  const [prediction, setPrediction] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const [themeMode, setThemeMode] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState("");
+  const [countdown, setCountdown] = useState(0);
+  const [submissionCount, setSubmissionCount] = useState(0);
+  const [preGameCountdown, setPreGameCountdown] = useState(null);
+  const [showOverlay, setShowOverlay] = useState(true); // controls start/countdown overlays
 
-
+  const themes = ["Animals", "Desserts", "Sports", "Games", "Transport", "Flowers"];
+  const getRandomTheme = () => themes[Math.floor(Math.random() * themes.length)];
+  const getRandomThinkingMessage = () => {
     const thinkingMessages = [
-        "Just a moment...",
-        "Let me think...",
-        "Hmm...",
-        "Analyzing masterpiece...",
-        "Interpreting your art...",
-        "This is deep..."
+      "Just a moment...",
+      "Let me think...",
+      "Hmm...",
+      "Analyzing masterpiece...",
+      "Interpreting your art...",
+      "This is deep..."
     ];
+    return thinkingMessages[Math.floor(Math.random() * thinkingMessages.length)];
+  };
 
-    const getRandomThinkingMessage = () =>
-        thinkingMessages[Math.floor(Math.random() * thinkingMessages.length)];
+  // Initialize canvas once
+  useEffect(() => {
+    const canvas = new fabric.Canvas(canvasEl.current, {
+      isDrawingMode: true,
+      width: 800,
+      height: 600,
+      backgroundColor: '#FFFFFF',
+    });
 
-    const themes = [
-        "Animals",
-        "Desserts",
-        "Sports",
-        "Games",
-        "Transport",
-        "Flowers"];
+    canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+    canvas.freeDrawingBrush.width = 5;
+    canvas.freeDrawingBrush.color = '#000000';
 
-    const getRandomTheme = () =>
-        themes[Math.floor(Math.random() * themes.length)];
+    canvasRef.current = canvas;
 
-    useEffect(() => {
-        // Initialize the Fabric.js canvas
-        const canvas = new fabric.Canvas(canvasEl.current, {
-            isDrawingMode: true, // Enable drawing mode
-            width: 800,
-            height: 600,
-            backgroundColor: '#f0f0f0',
-        });
-
-
-        // Configure the drawing brush
-        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-        canvas.freeDrawingBrush.width = 5; // Default brush size
-        canvas.freeDrawingBrush.color = '#000000'; // Default brush color
-
-        // Add event listeners or other Fabric.js configurations here
-        canvas.on('mouse:up', () => {
-            console.log('Drawing stopped');
-        });
-
-        // Store the canvas instance in a ref for later use
-        canvasRef.current = canvas;
-
-
-        // Cleanup on component unmount
-        return () => {
-            canvas.dispose();
-
-        };
-    }, []);
-
-    useEffect(() => {
-        let timer;
-        if (themeMode && countdown > 0) {
-          timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
-        } else if (themeMode && countdown === 0) {
-          alert(`Time's up! You submitted ${submissionCount} drawings!`);
-          setThemeMode(false);
-        }
-      
-        return () => clearTimeout(timer);
-      }, [themeMode, countdown]);
-      
-
-    const onNext = async () => {
-        const canvas = canvasRef.current;
-        if (canvas) {
-
-            setThinking(true);
-            setPrediction(getRandomThinkingMessage());
-
-            // Get the raw HTML canvas element from the Fabric.js canvas
-            const rawCanvas = canvas.getElement();
-            // Convert canvas to a Base64 string
-            const base64Image = rawCanvas.toDataURL("image/png"); // PNG format
-
-
-            try {
-                const response = await fetch('http://localhost:3000/analyze_image', {
-                    method: 'POST',
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ image: base64Image, theme: themeMode ? currentTheme : null, }), // Send the form data directly
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to send image for prediction');
-                }
-
-                const result = await response.text(); // <-- text now, not JSON
-                setPrediction(result);
-
-                if (themeMode && result.toLowerCase().includes("match")) {
-                    setSubmissionCount(prev => prev + 1);
-                }
-            } catch (error) {
-                console.error('Error sending image for prediction:', error);
-                setPrediction("Error predicting. Try again!");
-            } finally {
-                setThinking(false);
-            }
-
-        }
+    return () => {
+      canvas.dispose();
+      canvasRef.current = null;
     };
+  }, []);
 
+  // Game countdown
+  useEffect(() => {
+    let timer;
+    if (themeMode && countdown > 0) {
+      timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
+    } else if (themeMode && countdown === 0) {
+      alert(`Time's up! You submitted ${submissionCount} drawings!`);
+      setThemeMode(false);
+    }
+    return () => clearTimeout(timer);
+  }, [themeMode, countdown]);
 
+  const handleClear = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.clear();
+      canvas.setBackgroundColor('#FFFFFF', canvas.renderAll.bind(canvas));
+      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+      canvas.freeDrawingBrush.width = 5;
+      canvas.freeDrawingBrush.color = '#000000';
+    }
 
-    // Handle the clear button click
-    const handleClear = () => {
-        const canvas = canvasRef.current;
-        if (canvas) {
-            canvas.clear(); //  Clear all Fabric.js objects
-            canvas.backgroundColor = "#FFFFFF"; // ✅ Set permanent white background
-            canvas.renderAll(); // ✅ Force refresh
+    setPrediction("");
+    if (onClear) onClear();
+  };
+
+  const onNext = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    setThinking(true);
+    setPrediction(getRandomThinkingMessage());
+
+    const rawCanvas = canvas.getElement();
+    const base64Image = rawCanvas.toDataURL("image/png");
+
+    try {
+      const response = await fetch('http://localhost:3000/analyze_image', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: base64Image,
+          theme: themeMode ? currentTheme : null,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send image for prediction');
+      const result = await response.text();
+      setPrediction(result);
+
+      if (themeMode && result.toLowerCase().includes("match")) {
+        setSubmissionCount(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('Error sending image for prediction:', error);
+      setPrediction("Error predicting. Try again!");
+    } finally {
+      setThinking(false);
+    }
+  };
+
+  const startGame = () => {
+    setPreGameCountdown(3);
+
+    const countdownInterval = setInterval(() => {
+      setPreGameCountdown(prev => {
+        if (prev === 1) {
+          clearInterval(countdownInterval);
+          setPreGameCountdown(null);
+          setShowOverlay(false); // 🔥 remove overlays entirely
+          setThemeMode(true);
+          setCurrentTheme(getRandomTheme());
+          setCountdown(60);
+          setSubmissionCount(0);
+          handleClear();
+          return null;
         }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
-        setPrediction("");
-        if (onClear) {
-            onClear();
-        }
-    };
+  return (
+    <div className="canvas-container">
+      {/* Top scoreboard */}
+      <div className="scoreboard">
+        {themeMode ? (
+          <>
+            <h3>🎯 Theme: {currentTheme}</h3>
+            <p>⏳ {countdown}s | ✅ {submissionCount}</p>
+          </>
+        ) : (
+          <h2>🎮 Theme Challenge Mode</h2>
+        )}
+      </div>
 
-    return (
-        <div className="canvas-container">
-            {themeMode && (
-                <div className="theme-info">
-                    <h3>Theme: {currentTheme}</h3>
-                    <p>⏳ Time Left: {countdown}s</p>
-                    <p>✅ Submissions: {submissionCount}</p>
-                </div>
-            )}
+      {/* Canvas */}
+      <canvas ref={canvasEl} id="canvas" width={800} height={600} />
+      <Toolbar onClear={handleClear} onNext={onNext} />
 
-            <button
-                onClick={() => {
-                    setThemeMode(true);
-                    setCurrentTheme(getRandomTheme());
-                    setCountdown(60);
-                    setSubmissionCount(0);
-                    handleClear(); // clear canvas for fresh drawing
-                }}
-            >
+      {/* Overlays (start + countdown) */}
+      {showOverlay && (
+        <>
+          {preGameCountdown === null && (
+            <div className="start-overlay">
+              <button className="start-button" onClick={startGame}>
                 🎨 Start Theme Challenge
-            </button>
+              </button>
+            </div>
+          )}
 
-            <canvas ref={canvasEl} id="canvas" width={800} height={600} />
-            <Toolbar onClear={handleClear} onNext={onNext} />
-        </div>
-    );
+          {preGameCountdown !== null && (
+            <div className="countdown-overlay">
+              <h1>{preGameCountdown}</h1>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 };
 
 export default CanvasTheme;
