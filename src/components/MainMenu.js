@@ -13,7 +13,7 @@ function MainMenu() {
 
   return (
     <div className="menu-container">
-       <div className="top-green-bar">
+       <div className="top-blue-bar">
       <h1 className="title">Draw AI</h1>
       </div>
       <div className="menu-buttons">
