@@ -25,7 +25,7 @@ function GameOptions() {
         <button className="menu-button red" onClick={() => navigate("/game")}>
           Play Original Guesser
         </button>
-        <button className="menu-button yellow" onClick={() => navigate("/settings")}>
+        <button className="menu-button yellow" onClick={() => navigate("/game-theme")}>
          Play Theme Guesser
         </button>
       </div>
