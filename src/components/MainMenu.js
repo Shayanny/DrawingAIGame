@@ -17,7 +17,7 @@ function MainMenu() {
       <h1 className="title">Draw AI</h1>
       </div>
       <div className="menu-buttons">
-        <button className="menu-button red" onClick={() => navigate("/game")}>
+        <button className="menu-button red" onClick={() => navigate("/game-options")}>
           Play Now
         </button>
         <button className="menu-button yellow" onClick={() => setShowAccountPopup(true)}>
