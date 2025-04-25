@@ -58,3 +58,18 @@
     }
   }
   
+  .results-overlay {
+    margin-top: 20px;
+    padding: 1em;
+    background-color: #f0f8ff;
+    border: 2px solid #333;
+    border-radius: 10px;
+    max-width: 500px;
+  }
+  .results-overlay ul {
+    padding-left: 1em;
+  }
+  .results-overlay li {
+    margin-bottom: 0.5em;
+  }
+  

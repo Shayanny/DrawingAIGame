@@ -1,6 +1,6 @@
-import Toolbar from './Toolbar';
 import React, { useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
+import Toolbar from './ToolbarTheme';
 import './CanvasTheme.css';
 
 const CanvasTheme = ({ onClear }) => {
@@ -14,12 +14,13 @@ const CanvasTheme = ({ onClear }) => {
   const [countdown, setCountdown] = useState(0);
   const [submissionCount, setSubmissionCount] = useState(0);
   const [preGameCountdown, setPreGameCountdown] = useState(null);
-  const [showOverlay, setShowOverlay] = useState(true); // controls start/countdown overlays
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [drawingResults, setDrawingResults] = useState([]);
 
   const themes = ["Animals", "Desserts", "Sports", "Games", "Transport", "Flowers"];
   const getRandomTheme = () => themes[Math.floor(Math.random() * themes.length)];
   const getRandomThinkingMessage = () => {
-    const thinkingMessages = [
+    const messages = [
       "Just a moment...",
       "Let me think...",
       "Hmm...",
@@ -27,10 +28,10 @@ const CanvasTheme = ({ onClear }) => {
       "Interpreting your art...",
       "This is deep..."
     ];
-    return thinkingMessages[Math.floor(Math.random() * thinkingMessages.length)];
+    return messages[Math.floor(Math.random() * messages.length)];
   };
 
-  // Initialize canvas once
+  // Initialize fabric canvas
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasEl.current, {
       isDrawingMode: true,
@@ -51,17 +52,25 @@ const CanvasTheme = ({ onClear }) => {
     };
   }, []);
 
-  // Game countdown
+  // Game timer countdown
   useEffect(() => {
     let timer;
     if (themeMode && countdown > 0) {
       timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
     } else if (themeMode && countdown === 0) {
-      alert(`Time's up! You submitted ${submissionCount} drawings!`);
+      alert(`⏰ Time's up! You submitted ${submissionCount} drawings.`);
       setThemeMode(false);
+      setShowOverlay(true);
     }
     return () => clearTimeout(timer);
   }, [themeMode, countdown]);
+
+  useEffect(() => {
+    if (countdown === 0 && themeMode) {
+      console.log("Round over!");
+      console.log("Drawings:", drawingResults);
+    }
+  }, [countdown]);
 
   const handleClear = () => {
     const canvas = canvasRef.current;
@@ -99,8 +108,9 @@ const CanvasTheme = ({ onClear }) => {
       });
 
       if (!response.ok) throw new Error('Failed to send image for prediction');
-      const result = await response.text();
-      setPrediction(result);
+
+      const result = await response.json(); // This was changed from .text()
+      setDrawingResults(prev => [...prev, { input: base64Image, result }]);
 
       if (themeMode && result.toLowerCase().includes("match")) {
         setSubmissionCount(prev => prev + 1);
@@ -110,6 +120,7 @@ const CanvasTheme = ({ onClear }) => {
       setPrediction("Error predicting. Try again!");
     } finally {
       setThinking(false);
+      handleClear(); // clear canvas after submission
     }
   };
 
@@ -121,11 +132,12 @@ const CanvasTheme = ({ onClear }) => {
         if (prev === 1) {
           clearInterval(countdownInterval);
           setPreGameCountdown(null);
-          setShowOverlay(false); // 🔥 remove overlays entirely
+          setShowOverlay(false);
           setThemeMode(true);
           setCurrentTheme(getRandomTheme());
-          setCountdown(60);
+          setCountdown(30); // 30 second round
           setSubmissionCount(0);
+          setDrawingResults([]);
           handleClear();
           return null;
         }
@@ -136,7 +148,7 @@ const CanvasTheme = ({ onClear }) => {
 
   return (
     <div className="canvas-container">
-      {/* Top scoreboard */}
+      {/* Scoreboard */}
       <div className="scoreboard">
         {themeMode ? (
           <>
@@ -148,11 +160,11 @@ const CanvasTheme = ({ onClear }) => {
         )}
       </div>
 
-      {/* Canvas */}
+      {/* Drawing canvas */}
       <canvas ref={canvasEl} id="canvas" width={800} height={600} />
       <Toolbar onClear={handleClear} onNext={onNext} />
 
-      {/* Overlays (start + countdown) */}
+      {/* Countdown / Start overlays */}
       {showOverlay && (
         <>
           {preGameCountdown === null && (
@@ -169,6 +181,20 @@ const CanvasTheme = ({ onClear }) => {
             </div>
           )}
         </>
+      )}
+
+      {/* Result summary after game */}
+      {!themeMode && drawingResults.length > 0 && (
+        <div className="results-overlay">
+          <h3>🧠 Round Results</h3>
+          <p>Theme: <strong>{currentTheme}</strong></p>
+          <ul>
+            {drawingResults.map((entry, index) => (
+              <li key={index}>{index + 1}. {entry.result}</li>
+            ))}
+          </ul>
+          <button onClick={() => setDrawingResults([])}>Close</button>
+        </div>
       )}
     </div>
   );

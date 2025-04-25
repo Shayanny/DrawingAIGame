@@ -106,6 +106,43 @@ app.post("/analyze_image", async (req, res) => {
   }
 });
 
+// Theme Challenge Mode - Analyze Single Drawing with Theme Matching
+app.post("/analyze_theme_drawing", async (req, res) => {
+  try {
+    const { image, theme } = req.body;
+
+    if (!image || !theme) {
+      return res.status(400).json({ error: "Image and theme are required" });
+    }
+
+    const messages = [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: `This is a drawing submitted in a theme challenge. The theme is "${theme}". What does the drawing depict? Reply in one or two words. Only answer with what it is — do not explain.` },
+          { type: "image_url", image_url: { url: image } },
+        ],
+      },
+    ];
+
+    const response = await client.chat.completions.create({
+      model: "qwen/qwen2.5-vl-72b-instruct:free",
+      messages,
+      max_tokens: 100,
+    });
+
+    const message = response.choices[0]?.message?.content || "Unknown";
+    res.json({ result: message });
+
+  } catch (error) {
+    console.error("Theme Drawing Error:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Error analyzing themed drawing" });
+    }
+  }
+});
+
+
 
 // Start the Express server
 app.listen(port, () => {
