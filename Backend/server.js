@@ -109,40 +109,6 @@ app.post("/analyze_image", async (req, res) => {
   }
 });
 
-// Theme Challenge Mode - Analyze Single Drawing with Theme Matching
-/*app.post("/analyze_theme_drawing", async (req, res) => {
-  try {
-    const { image, theme } = req.body;
-    if (!image || !theme) return res.status(400).json({ error: "Image and theme are required" });
-
-    const messages = [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: `Analyze this drawing and respond in this exact format: "LABEL: [label]; DECISION: [MATCH/NO MATCH]". The theme is "${theme}".` },
-          { type: "image_url", image_url: { url: image } },
-        ],
-      },
-    ];
-
-    const response = await client.chat.completions.create({
-      model: "qwen/qwen2.5-vl-72b-instruct:free",
-      messages,
-      max_tokens: 100,
-    });
-
-    const fullResponse = response.choices[0].message?.content?.trim() || "";
-    console.log("Raw AI Response:", fullResponse);  // Debug log
-
-    const label = fullResponse.match(/LABEL:\s*(.+?)\s*;/i)?.[1] || "No label detected";
-    const match = fullResponse.includes("MATCH");
-
-    res.json({ label, match });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: `AI analysis failed: ${error.message}` });
-  }
-});*/
 
 
 async function processQueue() {
@@ -158,7 +124,7 @@ async function processQueue() {
         {
           role: "user",
           content: [
-            { type: "text", text: `Analyze this drawing. Respond EXACTLY like: "LABEL: [label]; MATCH: [YES/NO]". Theme: "${theme}"` },
+            { type: "text", text: `Analyze this drawing be specific in as few words as possible. Respond EXACTLY like: "LABEL: [label]; MATCH: [YES/NO]". Theme: "${theme}"` },
             { type: "image_url", image_url: { url: image } },
           ],
         },

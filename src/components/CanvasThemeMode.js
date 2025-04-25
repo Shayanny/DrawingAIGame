@@ -6,7 +6,8 @@ import './CanvasTheme.css';
 const CanvasTheme = ({ onClear }) => {
   const canvasRef = useRef(null);
   const canvasEl = useRef(null);
-
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [prediction, setPrediction] = useState("");
   const [thinking, setThinking] = useState(false);
   const [themeMode, setThemeMode] = useState(false);
@@ -17,8 +18,13 @@ const CanvasTheme = ({ onClear }) => {
   const [showOverlay, setShowOverlay] = useState(true);
   const [drawingResults, setDrawingResults] = useState([]);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [autoSubmitted, setAutoSubmitted] = useState(false);
+  const [isAutoSubmitting, setIsAutoSubmitting] = useState(false);
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
-  const themes = ["Animals", "Desserts", "Sports", "Games", "Transport", "Flowers"];
+
+
+  const themes = ["Animals", "Desserts", "Sports", "Games", "Transport", "Food"];
   const getRandomTheme = () => themes[Math.floor(Math.random() * themes.length)];
   const getRandomThinkingMessage = () => {
     const messages = [
@@ -65,20 +71,65 @@ const CanvasTheme = ({ onClear }) => {
     return () => clearTimeout(timer);
   }, [themeMode, countdown]);
 
-  useEffect(() => {
-    if (countdown === 0 && themeMode) {
-      console.log("Round over!");
-      console.log("Drawings:", drawingResults);
-    }
-  }, [countdown]);
 
+  //useEffect to handle end-of-game submission
   useEffect(() => {
-    if (!themeMode && countdown === 0 && drawingResults.length > 0) {
-      setTimeout(() => {
-        alert(`⏰ Time's up! You submitted ${submissionCount} drawings!`);
-      }, 100);
+    if (countdown === 0 && themeMode && !hasAutoSubmitted) {
+      const canvas = canvasRef.current;
+      if (canvas && !canvas.isEmpty()) {
+        // Only submit if there's actually a drawing
+        setHasAutoSubmitted(true);
+        setIsAutoSubmitting(true);
+        const base64Image = canvas.getElement().toDataURL("image/png");
+
+        // Add a delay to ensure the drawing is complete
+        setTimeout(async () => {
+          try {
+            const response = await fetch('http://localhost:3000/analyze_theme_drawing', {
+              method: 'POST',
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                image: base64Image,
+                theme: currentTheme
+              }),
+            });
+
+            const data = await response.json();
+
+            // Only add if we haven't already
+            setDrawingResults(prev => {
+              const alreadyExists = prev.some(item => item.input === base64Image);
+              return alreadyExists ? prev : [...prev, {
+                input: base64Image,
+                result: data.label,
+                match: data.match,
+                isAutoSubmitted: true
+              }];
+            });
+
+            if (data.match) {
+              setSubmissionCount(prev => prev + 1);
+              setTotalPoints(prev => prev + 10);
+            }
+          } catch (error) {
+            console.error('Auto-submit error:', error);
+            setDrawingResults(prev => [...prev, {
+              input: base64Image,
+              result: "Unknown",
+              match: false,
+              isAutoSubmitted: true
+            }]);
+          } finally {
+            setIsAutoSubmitting(false);
+            handleClear();
+          }
+        }, 500); // 500ms delay to ensure drawing is finalized
+      } else {
+        handleClear();
+      }
+      setThemeMode(false);
     }
-  }, [themeMode, countdown, drawingResults]);
+  }, [countdown, themeMode, hasAutoSubmitted]); // Trigger when countdown hits 0
 
 
   const handleClear = () => {
@@ -96,89 +147,66 @@ const CanvasTheme = ({ onClear }) => {
     if (onClear) onClear();
   };
 
-  /*
+
   const onNext = async () => {
     const canvas = canvasRef.current;
+    if (!canvas || isProcessing) return;
 
-    if (!canvas) return;
-
-    setThinking(true);
-
-
-    const rawCanvas = canvas.getElement();
-    const base64Image = rawCanvas.toDataURL("image/png");
-
+    const base64Image = canvas.getElement().toDataURL("image/png");
     handleClear();
+
+    // UI update
+    setPendingSubmissions(prev => prev + 1);
+    setIsProcessing(true);
 
     try {
       const response = await fetch('http://localhost:3000/analyze_theme_drawing', {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: base64Image,
-          theme: themeMode ? currentTheme : null,
-        }),
+        body: JSON.stringify({ image: base64Image, theme: currentTheme }),
       });
 
-      if (!response.ok) throw new Error('Failed to send image for prediction');
-
       const data = await response.json();
-      const label = data.label;
-      const match = data.match;
-       
-      
-      setDrawingResults(prev => [...prev, { input: base64Image, result: label, match }]);
 
-      if (themeMode && match) {
+      setDrawingResults(prev => [...prev, {
+        input: base64Image,
+        result: data.label,
+        match: data.match
+      }]);
+
+      if (data.match) {
         setSubmissionCount(prev => prev + 1);
         setTotalPoints(prev => prev + 10);
       }
     } catch (error) {
-      console.error('Error sending image for prediction:', error);
-      setPrediction("Error predicting. Try again!");
+      console.error('Submission error:', error);
     } finally {
-      setThinking(false);
-
+      setPendingSubmissions(prev => prev - 1);
+      setIsProcessing(false);
     }
-  };*/
-
-  const onNext = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || thinking) return; // Skip if already processing
-
-    const base64Image = canvas.getElement().toDataURL("image/png");
-    handleClear(); // Clear canvas IMMEDIATELY
-
-    setThinking(true); // Show "submitting..." state
-
-    // Submit to backend (no await!)
-    fetch('http://localhost:3000/analyze_theme_drawing', {
-      method: 'POST',
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: base64Image, theme: currentTheme }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setDrawingResults(prev => [...prev, {
-          input: base64Image,
-          result: data.label,
-          match: data.match
-        }]);
-        if (data.match) {
-          setSubmissionCount(prev => prev + 1);
-          setTotalPoints(prev => prev + 10);
-        }
-      })
-      .catch((error) => {
-        console.error("Submission error:", error);
-      })
-      .finally(() => {
-        setThinking(false); // Hide loading state
-      });
   };
 
   const startGame = () => {
+
+    setHasAutoSubmitted(false);
+
+    // 1. Cancel any pending submissions
+    setPendingSubmissions(0);
+    setIsProcessing(false);
+    setThinking(false);
+
+    // 2. Reset all game states
+    setDrawingResults([]);
+    setTotalPoints(0);
+    setSubmissionCount(0);
+    setAutoSubmitted(false);
+
+    // 3. Clear the canvas
+    handleClear();
+
+    // 4. Start new game countdown
     setPreGameCountdown(3);
+    setShowOverlay(true);
 
     const countdownInterval = setInterval(() => {
       setPreGameCountdown(prev => {
@@ -189,15 +217,21 @@ const CanvasTheme = ({ onClear }) => {
           setThemeMode(true);
           setCurrentTheme(getRandomTheme());
           setCountdown(30); // 30 second round
-          setSubmissionCount(0);
-          setDrawingResults([]);
-          handleClear();
           return null;
         }
         return prev - 1;
       });
     }, 1000);
   };
+
+  useEffect(() => {
+    return () => {
+      // Cancel any pending processes when component unmounts
+      setPendingSubmissions(0);
+      setIsProcessing(false);
+      setThinking(false);
+    };
+  }, []);
 
   return (
     <div className="canvas-container">
@@ -241,25 +275,31 @@ const CanvasTheme = ({ onClear }) => {
           <h3>🧠 Round Results</h3>
           <p>Theme: <strong>{currentTheme}</strong></p>
 
-          {/* Add this line to show pending submissions */}
-          {thinking && <p className="processing-status">🔄 Processing... (submitted: {submissionCount + 1})</p>}
+          {/* Show loading states */}
+          {isAutoSubmitting && (
+            <p className="processing-status">⏳ Analyzing your final drawing...</p>
+          )}
+          {(pendingSubmissions > 0 || thinking) && (
+            <p className="processing-status">
+              🔄 Processing {pendingSubmissions} drawing{pendingSubmissions !== 1 ? 's' : ''}...
+            </p>
+          )}
 
           {drawingResults.length === 0 ? (
             <p>No submissions yet.</p>
           ) : (
             <ul>
               {drawingResults.map((entry, index) => (
-                <li key={index}>
-                  {index + 1}. {entry.result} {entry.match ? "✅" : "❌"}
+                <li key={index} className={entry.isAutoSubmitted ? 'final-submission' : ''}>
+                  {index + 1}. {entry.result}
+                  {entry.match ? " ✅" : " ❌"}
+                  {entry.isAutoSubmitted && " (Final)"}
+                  {entry.result === "Unknown" && " - Couldn't analyze"}
                 </li>
               ))}
             </ul>
           )}
           <p>Total Score: {totalPoints} points</p>
-
-          {!themeMode && drawingResults.length > 0 && (
-            <button onClick={() => setDrawingResults([])}>Close</button>
-          )}
         </div>
       </div>
     </div>
