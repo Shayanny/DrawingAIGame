@@ -122,7 +122,7 @@ app.post('/analyze_image_detailed', async (req, res) => {
       {
         role: "user",
         content: [
-          { type: "text", text: "Describe this drawing in detail but less than 100 words" },
+          { type: "text", text: "Describe this drawing in detail but less than 50 words" },
           { type: "image_url", image_url: { url: image}},
         ],
       },
@@ -132,7 +132,7 @@ app.post('/analyze_image_detailed', async (req, res) => {
     const response = await client.chat.completions.create({
       model: "qwen/qwen2.5-vl-72b-instruct:free",
       messages: messages,
-      max_tokens: 20,
+      max_tokens: 50,
     });
 
     res.json( response.choices[0]?.message?.content || "No prediction available" );

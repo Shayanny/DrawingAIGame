@@ -1,9 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import Toolbar from './ToolbarTheme';
+import { useLocation } from "react-router-dom";
 import './CanvasTheme.css';
 
 const CanvasTheme = ({ onClear }) => {
+
+  const location = useLocation();
+
+
   const canvasRef = useRef(null);
   const canvasEl = useRef(null);
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
@@ -22,6 +27,12 @@ const CanvasTheme = ({ onClear }) => {
   const [isAutoSubmitting, setIsAutoSubmitting] = useState(false);
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
+
+  const { 
+    brushSize = 5, 
+    brushColor = '#000000',
+    darkMode = false 
+  } = location.state || {};
 
 
   const themes = ["Animals", "Desserts", "Sports", "Games", "Transport", "Food"];
@@ -44,12 +55,12 @@ const CanvasTheme = ({ onClear }) => {
       isDrawingMode: true,
       width: 800,
       height: 600,
-      backgroundColor: '#FFFFFF',
+      backgroundColor:  darkMode ? '#222' : '#f0f0f0',
     });
 
     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-    canvas.freeDrawingBrush.width = 5;
-    canvas.freeDrawingBrush.color = '#000000';
+    canvas.freeDrawingBrush.width = brushSize;
+    canvas.freeDrawingBrush.color = brushColor;
 
     canvasRef.current = canvas;
 
@@ -57,7 +68,7 @@ const CanvasTheme = ({ onClear }) => {
       canvas.dispose();
       canvasRef.current = null;
     };
-  }, []);
+  }, [brushSize, brushColor, darkMode]);
 
   // Game timer countdown
   useEffect(() => {

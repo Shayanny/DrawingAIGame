@@ -1,14 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import Toolbar from './Toolbar';
+import { useLocation } from "react-router-dom";
 import './Canvas.css';
 
 const Canvas = ({ onClear }) => {
+
+  const location = useLocation();
+
   const canvasRef = useRef(null);
   const canvasEl = useRef(null);
   const [prediction, setPrediction] = useState("");
   const [thinking, setThinking] = useState(false);
-  const [detailedMode, setDetailedMode] = useState(false); 
+  const [detailedMode, setDetailedMode] = useState(false);
+
 
   const thinkingMessages = [
     "Just a moment...",
@@ -22,24 +27,31 @@ const Canvas = ({ onClear }) => {
   const getRandomThinkingMessage = () =>
     thinkingMessages[Math.floor(Math.random() * thinkingMessages.length)];
 
+  const { 
+    brushSize = 5, 
+    brushColor = '#000000',
+    darkMode = false 
+  } = location.state || {};
+
+
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasEl.current, {
       isDrawingMode: true,
       width: 800,
       height: 600,
-      backgroundColor: '#f0f0f0',
+      backgroundColor: darkMode ? '#222' : '#f0f0f0',
     });
 
     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-    canvas.freeDrawingBrush.width = 5;
-    canvas.freeDrawingBrush.color = '#000000';
+    canvas.freeDrawingBrush.width = brushSize;
+    canvas.freeDrawingBrush.color = brushColor;
 
     canvasRef.current = canvas;
 
     return () => {
       canvas.dispose();
     };
-  }, []);
+  }, [brushSize, brushColor, darkMode]);
 
   const onSave = async () => {
     const canvas = canvasRef.current;
