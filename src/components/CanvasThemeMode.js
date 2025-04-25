@@ -55,7 +55,7 @@ const CanvasTheme = ({ onClear }) => {
       isDrawingMode: true,
       width: 800,
       height: 600,
-      backgroundColor:  darkMode ? '#222' : '#f0f0f0',
+      backgroundColor: darkMode ? '#222' : '#f0f0f0',
     });
 
     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
@@ -145,17 +145,18 @@ const CanvasTheme = ({ onClear }) => {
 
   const handleClear = () => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.clear();
-      canvas.setBackgroundColor('#FFFFFF', canvas.renderAll.bind(canvas));
-      canvas.isDrawingMode = true;
-      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-      canvas.freeDrawingBrush.width = 5;
-      canvas.freeDrawingBrush.color = '#000000';
-    }
-
-    setPrediction("");
-    if (onClear) onClear();
+  if (canvas) {
+    canvas.clear();
+    // Use the same colors as initialization
+    canvas.setBackgroundColor(darkMode ? '#222' : '#f0f0f0', () => {
+      canvas.renderAll();
+    });
+    // Reset brush settings
+    canvas.freeDrawingBrush.width = brushSize;
+    canvas.freeDrawingBrush.color = brushColor;
+  }
+  setPrediction("");
+  if (onClear) onClear();
   };
 
 
@@ -245,7 +246,7 @@ const CanvasTheme = ({ onClear }) => {
   }, []);
 
   return (
-    <div className="canvas-container">
+    <div className={`canvas-container ${darkMode ? 'dark-mode' : ''}`}>
       {/* Top scoreboard */}
       <div className="scoreboard">
         {themeMode ? (
@@ -282,7 +283,7 @@ const CanvasTheme = ({ onClear }) => {
         </div>
 
         {/* Right column: results (always visible) */}
-        <div className="results-side">
+        <div className={`results-side ${darkMode ? 'dark' : ''}`}>
           <h3>🧠 Round Results</h3>
           <p>Theme: <strong>{currentTheme}</strong></p>
 

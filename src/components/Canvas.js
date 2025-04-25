@@ -86,15 +86,20 @@ const Canvas = ({ onClear }) => {
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.clear();
-      canvas.backgroundColor = "#FFFFFF";
-      canvas.renderAll();
+      
+      canvas.setBackgroundColor(darkMode ? '#222' : '#f0f0f0', () => {
+        canvas.renderAll();
+      });
+      
+      canvas.freeDrawingBrush.width = brushSize;
+      canvas.freeDrawingBrush.color = brushColor;
     }
     setPrediction("");
     if (onClear) onClear();
   };
 
   return (
-    <div className="canvas-container">
+    <div className={`canvas-container ${darkMode ? 'dark-mode' : ''}`}>
       <div className="scoreboard">
         {thinking ? (
           <h2>{prediction}</h2>

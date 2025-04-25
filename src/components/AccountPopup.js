@@ -4,7 +4,7 @@ import Login from "./Login";
 import { auth, logOut } from "../firebase";
 import { updateProfile } from "firebase/auth";
 
-function AccountPopup({ onClose }) {
+function AccountPopup({ onClose ,  darkMode}) {
   const [showLogin, setShowLogin] = useState(false);
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
@@ -40,7 +40,7 @@ function AccountPopup({ onClose }) {
   };
 
   return (
-    <div className="popup">
+    <div className={`popup ${darkMode ? 'dark' : ''}`}>
       <div className="popup-content">
         <h2>My Account</h2>
         <br />

@@ -100,3 +100,55 @@
     border: 1px solid #ccc;
   }
   
+  .popup.dark .popup-content {
+    background-color: #2d2d2d;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  }
+  
+  .popup.dark .popup-content h2 {
+    color: #f0f0f0;
+  }
+  
+  .popup.dark .popup-button {
+    background-color: #4285f4;
+    color: white;
+    border: 1px solid #555;
+  }
+  
+  .popup.dark .popup-button:hover {
+    background-color: #3367d6;
+  }
+  
+  .popup.dark .popup-close {
+    background-color: #d32f2f;
+    color: white;
+  }
+  
+  .popup.dark .popup-close:hover {
+    background-color: #b71c1c;
+  }
+  
+  .popup.dark .popup-input {
+    background-color: #3d3d3d;
+    color: white;
+    border: 1px solid #555;
+  }
+  
+  .popup.dark .popup-input::placeholder {
+    color: #aaa;
+  }
+  
+  /* Text and labels in dark mode */
+  .popup.dark p,
+  .popup.dark label {
+    color: #e0e0e0;
+  }
+  
+  /* Add smooth transitions */
+  .popup-content,
+  .popup-content h2,
+  .popup-button,
+  .popup-close,
+  .popup-input {
+    transition: all 0.3s ease;
+  }

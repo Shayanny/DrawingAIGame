@@ -16,8 +16,14 @@
 
 #canvas {
   border: 1px solid #ccc;
+  background-color: #f0f0f0;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
+}
+
+.dark-mode #canvas {
+  background-color: #222; /* Dark mode color */
+  border: 1px solid #444;
 }
 
 .canvas-responsive {

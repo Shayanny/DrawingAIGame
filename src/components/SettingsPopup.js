@@ -15,7 +15,7 @@ function SettingsPopup({  onClose,
   const colorPresets = ['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'];
 
   return (
-    <div className="popup">
+    <div className={`popup ${darkMode ? 'dark' : ''}`}>
       <div className="popup-content">
         <h2>Settings</h2>
         <br />
@@ -23,7 +23,7 @@ function SettingsPopup({  onClose,
         {/* Theme Toggle */}
         <div className="setting-item">
           <label>Dark Mode</label>
-          <div className="toggle-switch">
+          <div className={`toggle-switch ${darkMode ? 'dark' : ''}`}>
             <input 
               type="checkbox" 
               id="dark-mode-toggle" 

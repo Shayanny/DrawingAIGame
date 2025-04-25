@@ -10,6 +10,17 @@
   border-radius: 10px;
 }
 
+#canvas {
+  background-color: #f0f0f0; 
+  border: 1px solid #ddd;
+  display: block; 
+}
+
+.dark-mode #canvas {
+  background-color: #222;
+  border: 1px solid #444;
+}
+
 .canvas-wrapper {
   position: relative;
   width: 800px;
@@ -65,6 +76,10 @@
   font-weight: bold;
   z-index: 11;
   color: black;
+  opacity: 0; /* Start invisible */
+  animation: fadeInScale 0.4s ease forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .countdown-number {
@@ -87,6 +102,18 @@
 .countdown-overlay h1 {
   font-size: 5rem;
   color: #333;
+  animation: fadeInScale 0.4s ease;
+}
+
+
+.dark-mode .countdown-overlay h1 {
+  color: white; 
+}
+
+
+.dark-mode .countdown-number {
+  opacity: 1;
+  color: white; 
   animation: fadeInScale 0.4s ease;
 }
 
@@ -147,4 +174,28 @@
   0% { opacity: 0.8; }
   50% { opacity: 0.3; }
   100% { opacity: 0.8; }
+}
+
+.results-side.dark {
+  width: 260px;
+  min-height: 300px;              
+  margin-top: 20px;      
+  background: #3d3d3d ;
+  color:#f0f8ff;
+  border: 3px solid #333;
+  border-radius: 5px;
+  padding: 1em;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+  max-height: 500px;
+  overflow-y: auto;
+
+}
+
+.results-overlay.dark {
+  margin-top: 20px;
+  padding: 1em;
+  background-color: #3d3d3d;
+  border: 2px solid #333;
+  border-radius: 10px;
+  max-width: 500px;
 }

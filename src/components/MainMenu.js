@@ -34,7 +34,11 @@ function MainMenu() {
         </button>
       </div>
 
-      {showAccountPopup && <AccountPopup onClose={() => setShowAccountPopup(false)} />}
+      {showAccountPopup && (
+        <AccountPopup onClose={() => setShowAccountPopup(false)}
+         darkMode={darkMode}
+      />)}
+
       {showSettingsPopup && (
         <SettingsPopup
           onClose={() => setShowSettingsPopup(false)}
