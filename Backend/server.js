@@ -7,15 +7,18 @@ const cors = require('cors');
 const bodyParser = require("body-parser");
 const OpenAi = require('openai');
 
-require('dotenv').config();
+require('dotenv').config({ path: './.env' });
 
 
 // Initialize Express app
 const app = express();
 const port = 3000;
 
-const apiToken = process.env.OP_API_TOKEN;
-//const DAapiToken = process.env.DA_API_KEY;
+const apiToken = process.env.OP_API_TOKEN ;
+
+const drawingQueue = [];
+let isProcessing = false;
+
 
 app.use(cors({
   origin: 'http://localhost:3001',
@@ -91,7 +94,7 @@ app.post("/analyze_image", async (req, res) => {
     const response = await client.chat.completions.create({
       model: "qwen/qwen2.5-vl-72b-instruct:free",
       messages: messages,
-      max_tokens: 300,
+      max_tokens: 10,
     });
 
     res.json( response.choices[0]?.message?.content || "No prediction available" );
@@ -107,19 +110,16 @@ app.post("/analyze_image", async (req, res) => {
 });
 
 // Theme Challenge Mode - Analyze Single Drawing with Theme Matching
-app.post("/analyze_theme_drawing", async (req, res) => {
+/*app.post("/analyze_theme_drawing", async (req, res) => {
   try {
     const { image, theme } = req.body;
-
-    if (!image || !theme) {
-      return res.status(400).json({ error: "Image and theme are required" });
-    }
+    if (!image || !theme) return res.status(400).json({ error: "Image and theme are required" });
 
     const messages = [
       {
         role: "user",
         content: [
-          { type: "text", text: `This is a drawing submitted in a theme challenge. The theme is "${theme}". What does the drawing depict? Reply in one or two words. Only answer with what it is — do not explain.` },
+          { type: "text", text: `Analyze this drawing and respond in this exact format: "LABEL: [label]; DECISION: [MATCH/NO MATCH]". The theme is "${theme}".` },
           { type: "image_url", image_url: { url: image } },
         ],
       },
@@ -131,16 +131,64 @@ app.post("/analyze_theme_drawing", async (req, res) => {
       max_tokens: 100,
     });
 
-    const message = response.choices[0]?.message?.content || "Unknown";
-    res.json({ result: message });
+    const fullResponse = response.choices[0].message?.content?.trim() || "";
+    console.log("Raw AI Response:", fullResponse);  // Debug log
 
+    const label = fullResponse.match(/LABEL:\s*(.+?)\s*;/i)?.[1] || "No label detected";
+    const match = fullResponse.includes("MATCH");
+
+    res.json({ label, match });
   } catch (error) {
-    console.error("Theme Drawing Error:", error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: "Error analyzing themed drawing" });
-    }
+    console.error("Error:", error);
+    res.status(500).json({ error: `AI analysis failed: ${error.message}` });
   }
+});*/
+
+
+async function processQueue() {
+  if (isProcessing || drawingQueue.length === 0) return;
+  isProcessing = true;
+
+  const { image, theme, res } = drawingQueue.shift(); // Get the oldest submission
+
+  try {
+    const response = await client.chat.completions.create({
+      model: "qwen/qwen2.5-vl-72b-instruct:free",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: `Analyze this drawing. Respond EXACTLY like: "LABEL: [label]; MATCH: [YES/NO]". Theme: "${theme}"` },
+            { type: "image_url", image_url: { url: image } },
+          ],
+        },
+      ],
+      max_tokens: 200,
+    });
+
+    const result = response.choices[0].message.content;
+    const label = result.match(/LABEL:\s*(.+?)\s*;/i)?.[1] || "Unknown";
+    const match = result.includes("MATCH: YES");
+
+    res.json({ label, match }); // Send back to frontend
+  } catch (error) {
+    console.error("Queue error:", error);
+    res.status(500).json({ error: "AI processing failed" });
+  } finally {
+    isProcessing = false;
+    processQueue(); // Process next in queue
+  }
+}
+
+// Updated endpoint (now adds to queue instead of blocking)
+app.post("/analyze_theme_drawing", (req, res) => {
+  const { image, theme } = req.body;
+  if (!image || !theme) return res.status(400).json({ error: "Missing data" });
+
+  drawingQueue.push({ image, theme, res }); // Add to queue
+  if (!isProcessing) processQueue(); // Start processing if idle
 });
+
 
 
 

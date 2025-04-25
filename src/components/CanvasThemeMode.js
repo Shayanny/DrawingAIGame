@@ -16,6 +16,7 @@ const CanvasTheme = ({ onClear }) => {
   const [preGameCountdown, setPreGameCountdown] = useState(null);
   const [showOverlay, setShowOverlay] = useState(true);
   const [drawingResults, setDrawingResults] = useState([]);
+  const [totalPoints, setTotalPoints] = useState(0);
 
   const themes = ["Animals", "Desserts", "Sports", "Games", "Transport", "Flowers"];
   const getRandomTheme = () => themes[Math.floor(Math.random() * themes.length)];
@@ -95,8 +96,10 @@ const CanvasTheme = ({ onClear }) => {
     if (onClear) onClear();
   };
 
+  /*
   const onNext = async () => {
     const canvas = canvasRef.current;
+
     if (!canvas) return;
 
     setThinking(true);
@@ -119,12 +122,16 @@ const CanvasTheme = ({ onClear }) => {
 
       if (!response.ok) throw new Error('Failed to send image for prediction');
 
-      const data = await response.json();         // full response is { result: "flower" }
-      const result = data.result;                 // extract just the string
-      setDrawingResults(prev => [...prev, { input: base64Image, result }]);
+      const data = await response.json();
+      const label = data.label;
+      const match = data.match;
+       
+      
+      setDrawingResults(prev => [...prev, { input: base64Image, result: label, match }]);
 
-      if (themeMode && result.toLowerCase().includes("match")) {
+      if (themeMode && match) {
         setSubmissionCount(prev => prev + 1);
+        setTotalPoints(prev => prev + 10);
       }
     } catch (error) {
       console.error('Error sending image for prediction:', error);
@@ -133,6 +140,41 @@ const CanvasTheme = ({ onClear }) => {
       setThinking(false);
 
     }
+  };*/
+
+  const onNext = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || thinking) return; // Skip if already processing
+
+    const base64Image = canvas.getElement().toDataURL("image/png");
+    handleClear(); // Clear canvas IMMEDIATELY
+
+    setThinking(true); // Show "submitting..." state
+
+    // Submit to backend (no await!)
+    fetch('http://localhost:3000/analyze_theme_drawing', {
+      method: 'POST',
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: base64Image, theme: currentTheme }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setDrawingResults(prev => [...prev, {
+          input: base64Image,
+          result: data.label,
+          match: data.match
+        }]);
+        if (data.match) {
+          setSubmissionCount(prev => prev + 1);
+          setTotalPoints(prev => prev + 10);
+        }
+      })
+      .catch((error) => {
+        console.error("Submission error:", error);
+      })
+      .finally(() => {
+        setThinking(false); // Hide loading state
+      });
   };
 
   const startGame = () => {
@@ -173,24 +215,24 @@ const CanvasTheme = ({ onClear }) => {
       <div className="canvas-flex">
         {/* Left column: canvas + toolbar + start overlay */}
         <div className="canvas-column">
-          <canvas ref={canvasEl} id="canvas" width={800} height={600} />
+          <div className="canvas-wrapper">
+            <canvas ref={canvasEl} id="canvas" width={800} height={600} />
+
+            {showOverlay && preGameCountdown !== null && (
+              <div className="countdown-overlay">
+                <h1>{preGameCountdown}</h1>
+              </div>
+            )}
+          </div>
+
           <Toolbar onClear={handleClear} onNext={onNext} thinking={thinking} />
 
-          {showOverlay && (
-            <>
-              {preGameCountdown === null && (
-                <div className="start-overlay">
-                  <button className="start-button" onClick={startGame}>
-                    🎨 Start Theme Challenge
-                  </button>
-                </div>
-              )}
-              {preGameCountdown !== null && (
-                <div className="countdown-overlay">
-                  <h1>{preGameCountdown}</h1>
-                </div>
-              )}
-            </>
+          {showOverlay && preGameCountdown === null && (
+            <div className="start-overlay">
+              <button className="start-button" onClick={startGame}>
+                🎨 Start Theme Challenge
+              </button>
+            </div>
           )}
         </div>
 
@@ -198,15 +240,23 @@ const CanvasTheme = ({ onClear }) => {
         <div className="results-side">
           <h3>🧠 Round Results</h3>
           <p>Theme: <strong>{currentTheme}</strong></p>
+
+          {/* Add this line to show pending submissions */}
+          {thinking && <p className="processing-status">🔄 Processing... (submitted: {submissionCount + 1})</p>}
+
           {drawingResults.length === 0 ? (
             <p>No submissions yet.</p>
           ) : (
             <ul>
               {drawingResults.map((entry, index) => (
-                <li key={index}>{index + 1}. {entry.result}</li>
+                <li key={index}>
+                  {index + 1}. {entry.result} {entry.match ? "✅" : "❌"}
+                </li>
               ))}
             </ul>
           )}
+          <p>Total Score: {totalPoints} points</p>
+
           {!themeMode && drawingResults.length > 0 && (
             <button onClick={() => setDrawingResults([])}>Close</button>
           )}
