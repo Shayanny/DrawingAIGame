@@ -58,7 +58,6 @@ const CanvasTheme = ({ onClear }) => {
     if (themeMode && countdown > 0) {
       timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
     } else if (themeMode && countdown === 0) {
-      alert(`⏰ Time's up! You submitted ${submissionCount} drawings.`);
       setThemeMode(false);
       setShowOverlay(true);
     }
@@ -71,6 +70,15 @@ const CanvasTheme = ({ onClear }) => {
       console.log("Drawings:", drawingResults);
     }
   }, [countdown]);
+
+  useEffect(() => {
+    if (!themeMode && countdown === 0 && drawingResults.length > 0) {
+      setTimeout(() => {
+        alert(`⏰ Time's up! You submitted ${submissionCount} drawings!`);
+      }, 100);
+    }
+  }, [themeMode, countdown, drawingResults]);
+
 
   const handleClear = () => {
     const canvas = canvasRef.current;
@@ -92,13 +100,15 @@ const CanvasTheme = ({ onClear }) => {
     if (!canvas) return;
 
     setThinking(true);
-    setPrediction(getRandomThinkingMessage());
+
 
     const rawCanvas = canvas.getElement();
     const base64Image = rawCanvas.toDataURL("image/png");
 
+    handleClear();
+
     try {
-      const response = await fetch('http://localhost:3000/analyze_image', {
+      const response = await fetch('http://localhost:3000/analyze_theme_drawing', {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -109,7 +119,8 @@ const CanvasTheme = ({ onClear }) => {
 
       if (!response.ok) throw new Error('Failed to send image for prediction');
 
-      const result = await response.json(); // This was changed from .text()
+      const data = await response.json();         // full response is { result: "flower" }
+      const result = data.result;                 // extract just the string
       setDrawingResults(prev => [...prev, { input: base64Image, result }]);
 
       if (themeMode && result.toLowerCase().includes("match")) {
@@ -120,7 +131,7 @@ const CanvasTheme = ({ onClear }) => {
       setPrediction("Error predicting. Try again!");
     } finally {
       setThinking(false);
-      handleClear(); // clear canvas after submission
+
     }
   };
 
@@ -148,7 +159,7 @@ const CanvasTheme = ({ onClear }) => {
 
   return (
     <div className="canvas-container">
-      {/* Scoreboard */}
+      {/* Top scoreboard */}
       <div className="scoreboard">
         {themeMode ? (
           <>
@@ -159,45 +170,52 @@ const CanvasTheme = ({ onClear }) => {
           <h2>🎮 Theme Challenge Mode</h2>
         )}
       </div>
+      <div className="canvas-flex">
+        {/* Left column: canvas + toolbar + start overlay */}
+        <div className="canvas-column">
+          <canvas ref={canvasEl} id="canvas" width={800} height={600} />
+          <Toolbar onClear={handleClear} onNext={onNext} thinking={thinking} />
 
-      {/* Drawing canvas */}
-      <canvas ref={canvasEl} id="canvas" width={800} height={600} />
-      <Toolbar onClear={handleClear} onNext={onNext} />
-
-      {/* Countdown / Start overlays */}
-      {showOverlay && (
-        <>
-          {preGameCountdown === null && (
-            <div className="start-overlay">
-              <button className="start-button" onClick={startGame}>
-                🎨 Start Theme Challenge
-              </button>
-            </div>
+          {showOverlay && (
+            <>
+              {preGameCountdown === null && (
+                <div className="start-overlay">
+                  <button className="start-button" onClick={startGame}>
+                    🎨 Start Theme Challenge
+                  </button>
+                </div>
+              )}
+              {preGameCountdown !== null && (
+                <div className="countdown-overlay">
+                  <h1>{preGameCountdown}</h1>
+                </div>
+              )}
+            </>
           )}
+        </div>
 
-          {preGameCountdown !== null && (
-            <div className="countdown-overlay">
-              <h1>{preGameCountdown}</h1>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Result summary after game */}
-      {!themeMode && drawingResults.length > 0 && (
-        <div className="results-overlay">
+        {/* Right column: results (always visible) */}
+        <div className="results-side">
           <h3>🧠 Round Results</h3>
           <p>Theme: <strong>{currentTheme}</strong></p>
-          <ul>
-            {drawingResults.map((entry, index) => (
-              <li key={index}>{index + 1}. {entry.result}</li>
-            ))}
-          </ul>
-          <button onClick={() => setDrawingResults([])}>Close</button>
+          {drawingResults.length === 0 ? (
+            <p>No submissions yet.</p>
+          ) : (
+            <ul>
+              {drawingResults.map((entry, index) => (
+                <li key={index}>{index + 1}. {entry.result}</li>
+              ))}
+            </ul>
+          )}
+          {!themeMode && drawingResults.length > 0 && (
+            <button onClick={() => setDrawingResults([])}>Close</button>
+          )}
         </div>
-      )}
+      </div>
     </div>
+
   );
+
 };
 
 export default CanvasTheme;
