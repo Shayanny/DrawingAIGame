@@ -109,6 +109,44 @@ app.post("/analyze_image", async (req, res) => {
   }
 });
 
+app.post('/analyze_image_detailed', async (req, res) => {
+   
+  try {
+    const { image } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ error: "No image received" });
+    }
+    // Construct messages for DeepSeek vision model
+    const messages = [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Describe this drawing in detail but less than 100 words" },
+          { type: "image_url", image_url: { url: image}},
+        ],
+      },
+    ];
+
+    // Send request to DeepSeek Vision model
+    const response = await client.chat.completions.create({
+      model: "qwen/qwen2.5-vl-72b-instruct:free",
+      messages: messages,
+      max_tokens: 20,
+    });
+
+    res.json( response.choices[0]?.message?.content || "No prediction available" );
+  
+  } catch (error) {
+    console.error("Image Processing Error:", error);
+     // Ensure error response is sent only ONCE
+     if (!res.headersSent) { 
+      return res.status(500).json({ error: `Error processing image: ${error.message}` });
+    }
+  }
+    
+});
+
 
 
 async function processQueue() {
