@@ -12,7 +12,6 @@ require('dotenv').config({ path: './.env' });
 
 // Initialize Express app
 const app = express();
-const port = 3000;
 
 const apiToken = process.env.OP_API_TOKEN ;
 
@@ -194,10 +193,9 @@ app.post("/analyze_theme_drawing", (req, res) => {
 });
 
 
-
-
 // Start the Express server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
