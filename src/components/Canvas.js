@@ -64,7 +64,7 @@ const Canvas = ({ onClear }) => {
       const base64Image = canvas.getElement().toDataURL("image/png");
       const endpoint = detailedMode ? '/analyze_image_detailed' : '/analyze_image';
 
-      const response = await fetch(`http://localhost:3000${endpoint}`, {
+      const response = await fetch(`https://your-backend-name.onrender.com${endpoint}`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: base64Image }),

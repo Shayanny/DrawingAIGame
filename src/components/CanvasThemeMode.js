@@ -96,7 +96,7 @@ const CanvasTheme = ({ onClear }) => {
         // Add a delay to ensure the drawing is complete
         setTimeout(async () => {
           try {
-            const response = await fetch('http://localhost:3000/analyze_theme_drawing', {
+            const response = await fetch('https://your-backend-name.onrender.com/analyze_theme_drawing', {
               method: 'POST',
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
