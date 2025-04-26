@@ -44,7 +44,9 @@ const CanvasTheme = ({ onClear }) => {
       "Hmm...",
       "Analyzing masterpiece...",
       "Interpreting your art...",
-      "This is deep..."
+      "This is deep...",
+      "Oh wow..",
+      "Very.... interesting.."
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   };
