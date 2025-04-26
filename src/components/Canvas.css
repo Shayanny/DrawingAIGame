@@ -22,7 +22,8 @@
 }
 
 .dark-mode #canvas {
-  background-color: #222; /* Dark mode color */
+  background-color: #222;
+  /* Dark mode color */
   border: 1px solid #444;
 }
 
@@ -77,7 +78,6 @@
   border-radius: 5px;
   cursor: pointer;
   margin-top: 40px;
-
 }
 
 .detail-toggle:hover {
@@ -96,5 +96,44 @@
 }
 
 canvas {
-  touch-action: none; /* Allows smooth drawing on touch devices */
+  touch-action: none;
+  -webkit-touch-callout: none;
+  /* Prevents long-press context menu */
+  -webkit-user-select: none;
+  /* Prevents selecting stuff accidentally */
+  user-select: none;
+  /* Allows smooth drawing on touch devices */
+}
+
+/* --- MOBILE FRIENDLY UPDATES (without touching Desktop) --- */
+
+@media (max-width: 768px) {
+
+  .canvas-container {
+    height: auto;
+    padding-top: 20px;
+    gap: 10px;
+  }
+
+  #canvas {
+    width: 95%;
+    height: 300px;
+  }
+
+  .scoreboard {
+    width: 90%;
+    margin: 0 auto 10px auto;
+    font-size: 16px;
+  }
+
+  .controls {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .detail-toggle {
+    margin-top: 20px;
+    width: 80%;
+  }
 }

@@ -1,4 +1,6 @@
-.canvas-container {
+/* --- FINAL Theme Mode Canvas CSS --- */
+
+.canvas-container.theme-mode {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -11,9 +13,9 @@
 }
 
 #canvas {
-  background-color: #f0f0f0; 
+  background-color: #f0f0f0;
   border: 1px solid #ddd;
-  display: block; 
+  display: block;
 }
 
 .dark-mode #canvas {
@@ -31,17 +33,15 @@
   display: flex;
   align-items: flex-start;
   gap: 40px;
-  margin-left: 40px; 
-  
+  margin-left: 40px;
 }
 
 .canvas-column {
   display: flex;
   flex-direction: column;
-  align-items: center;       
-  position: relative;  
+  align-items: center;
+  position: relative;
   margin-right: 100px;
-  
 }
 
 .scoreboard {
@@ -76,7 +76,7 @@
   font-weight: bold;
   z-index: 11;
   color: black;
-  opacity: 0; /* Start invisible */
+  opacity: 0;
   animation: fadeInScale 0.4s ease forwards;
   will-change: transform, opacity;
   backface-visibility: hidden;
@@ -86,7 +86,6 @@
   animation: countdownPop 0.4s ease-out;
   opacity: 1;
 }
-
 
 .start-button {
   pointer-events: auto;
@@ -105,15 +104,13 @@
   animation: fadeInScale 0.4s ease;
 }
 
-
 .dark-mode .countdown-overlay h1 {
-  color: white; 
+  color: white;
 }
-
 
 .dark-mode .countdown-number {
   opacity: 1;
-  color: white; 
+  color: white;
   animation: fadeInScale 0.4s ease;
 }
 
@@ -122,7 +119,6 @@
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.8);
   }
-
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
@@ -148,9 +144,9 @@
 
 .results-side {
   width: 260px;
-  min-height: 300px;              
-  margin-top: 20px;      
-  background: #fff ;
+  min-height: 300px;
+  margin-top: 20px;
+  background: #fff;
   border: 3px solid #333;
   border-radius: 5px;
   padding: 1em;
@@ -177,25 +173,133 @@
 }
 
 .results-side.dark {
-  width: 260px;
-  min-height: 300px;              
-  margin-top: 20px;      
-  background: #3d3d3d ;
-  color:#f0f8ff;
-  border: 3px solid #333;
-  border-radius: 5px;
-  padding: 1em;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-  max-height: 500px;
-  overflow-y: auto;
-
+  background: #3d3d3d;
+  color: #f0f8ff;
 }
 
 .results-overlay.dark {
-  margin-top: 20px;
-  padding: 1em;
   background-color: #3d3d3d;
   border: 2px solid #333;
-  border-radius: 10px;
-  max-width: 500px;
+}
+
+.toolbar {
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.8);
+  width: 100%;
+  padding: 8px 0;
+}
+
+.dark-mode .toolbar {
+  background: rgba(40, 40, 40, 0.8);
+}
+
+/* --- Mobile Only: for theme-mode only --- */
+@media (max-width: 768px) {
+  .canvas-container.theme-mode {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .theme-mode .canvas-wrapper {
+    width: 100% !important;
+    height: 55vh !important;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto !important;
+  }
+
+  .theme-mode #canvas {
+    width: 100% !important;
+    height: auto !important;
+    transform: none !important;
+    touch-action: none; 
+  }
+
+  .theme-mode .scoreboard {
+    margin: 0 auto 5px auto !important;
+    padding: 8px !important;
+    width: 95% !important;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  .theme-mode .canvas-flex {
+    flex-direction: column;
+    gap: 15px;
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .theme-mode .canvas-column {
+    width: 100%;
+    margin-right: 0;
+    gap: 5px !important;
+    margin-top: 0 !important;
+  }
+
+  .theme-mode .start-button {
+    width: auto;
+    padding: 10px 20px;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
+  .theme-mode .countdown-overlay h1 {
+    font-size: 4rem;
+  }
+
+  /* Mobile results panel */
+  .theme-mode .results-side {
+    width: 95%;
+    margin: 15px auto 0;
+    max-height: 300px;
+    font-size: 14px;
+    padding: 12px;
+    order: 3; /* Move below canvas on mobile */
+  }
+
+  .theme-mode .results-overlay {
+    background: white !important;
+    border: 2px solid #ddd !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    margin: 10px auto 0 !important;
+    width: 95% !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+  }
+
+  .theme-mode.dark-mode .mobile-results-panel {
+    background: #333 !important;
+    border-color: #555 !important;
+  }
+
+  /* Touch-friendly toolbar buttons */
+  .theme-mode .toolbar button {
+    padding: 10px 15px;
+    min-width: 80px;
+    font-size: 14px;
+  }
+
+  /* Adjust drawing brush size for touch */
+  .theme-mode .canvas-container {
+    --brush-size-multiplier: 1.5;
+  }
+  
+  .theme-mode .start-overlay {
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .theme-mode .toolbar {
+    margin-top: -5px !important;
+    width: 95% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 5px 0 !important;
+  }
+
 }

@@ -5,10 +5,7 @@ import { useLocation } from "react-router-dom";
 import './CanvasTheme.css';
 
 const CanvasTheme = ({ onClear }) => {
-
   const location = useLocation();
-
-
   const canvasRef = useRef(null);
   const canvasEl = useRef(null);
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
@@ -26,14 +23,13 @@ const CanvasTheme = ({ onClear }) => {
   const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [isAutoSubmitting, setIsAutoSubmitting] = useState(false);
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
-
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const { 
     brushSize = 5, 
     brushColor = '#000000',
     darkMode = false 
   } = location.state || {};
-
 
   const themes = ["Animals", "Desserts", "Sports", "Games", "Transport", "Food"];
   const getRandomTheme = () => themes[Math.floor(Math.random() * themes.length)];
@@ -53,24 +49,78 @@ const CanvasTheme = ({ onClear }) => {
 
   // Initialize fabric canvas
   useEffect(() => {
-    const canvas = new fabric.Canvas(canvasEl.current, {
-      isDrawingMode: true,
-      width: 800,
-      height: 600,
-      backgroundColor: darkMode ? '#222' : '#f0f0f0',
-    });
+    const handleResize = () => {
+      const mobileCheck = window.innerWidth <= 768;
+      setIsMobile(mobileCheck);
+      
+      if (canvasRef.current) {
+        const canvas = canvasRef.current;
+        if (mobileCheck) {
+          const newWidth = window.innerWidth * 0.9;
+          canvas.setWidth(newWidth);
+          canvas.setHeight(newWidth * 0.75);
+        } else {
+          canvas.setWidth(800);
+          canvas.setHeight(600);
+        }
+        canvas.calcOffset();
+        canvas.renderAll();
+        if (isMobile) {
+          canvas.on('mouse:down', (e) => {
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+          });
+          
+          canvas.on('mouse:up', (e) => {
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+          });
+        }
+      }
+      
+    };
 
-    canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-    canvas.freeDrawingBrush.width = brushSize;
-    canvas.freeDrawingBrush.color = brushColor;
+    const initCanvas = () => {
+      const baseWidth = isMobile ? window.innerWidth * 0.9 : 800;
+      const baseHeight = isMobile ? baseWidth * 0.75 : 600;
 
-    canvasRef.current = canvas;
+      const canvas = new fabric.Canvas(canvasEl.current, {
+        isDrawingMode: true,
+        width: baseWidth,
+        height: baseHeight,
+        backgroundColor: darkMode ? '#222' : '#f0f0f0',
+      });
+
+      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+      canvas.freeDrawingBrush.width = brushSize;
+      canvas.freeDrawingBrush.color = brushColor;
+
+      // Mobile-specific touch handling
+      if (isMobile) {
+        canvas.selection = false;
+        canvas.on('touch:start', (e) => {
+          if (e.e.touches.length === 1) {
+            canvas.isDrawingMode = true;
+          } else {
+            canvas.isDrawingMode = false;
+          }
+        });
+      }
+
+      canvasRef.current = canvas;
+      window.addEventListener('resize', handleResize);
+    };
+
+    initCanvas();
 
     return () => {
-      canvas.dispose();
+      if (canvasRef.current) {
+        canvasRef.current.dispose();
+      }
+      window.removeEventListener('resize', handleResize);
       canvasRef.current = null;
     };
-  }, [brushSize, brushColor, darkMode]);
+  }, [brushSize, brushColor, darkMode, isMobile]);
 
   // Game timer countdown
   useEffect(() => {
@@ -84,18 +134,15 @@ const CanvasTheme = ({ onClear }) => {
     return () => clearTimeout(timer);
   }, [themeMode, countdown]);
 
-
-  //useEffect to handle end-of-game submission
+  // Handle end-of-game submission
   useEffect(() => {
     if (countdown === 0 && themeMode && !hasAutoSubmitted) {
       const canvas = canvasRef.current;
       if (canvas && !canvas.isEmpty()) {
-        // Only submit if there's actually a drawing
         setHasAutoSubmitted(true);
         setIsAutoSubmitting(true);
         const base64Image = canvas.getElement().toDataURL("image/png");
 
-        // Add a delay to ensure the drawing is complete
         setTimeout(async () => {
           try {
             const response = await fetch('https://drawingaibackend.onrender.com/analyze_theme_drawing', {
@@ -109,7 +156,6 @@ const CanvasTheme = ({ onClear }) => {
 
             const data = await response.json();
 
-            // Only add if we haven't already
             setDrawingResults(prev => {
               const alreadyExists = prev.some(item => item.input === base64Image);
               return alreadyExists ? prev : [...prev, {
@@ -136,31 +182,27 @@ const CanvasTheme = ({ onClear }) => {
             setIsAutoSubmitting(false);
             handleClear();
           }
-        }, 500); // 500ms delay to ensure drawing is finalized
+        }, 500);
       } else {
         handleClear();
       }
       setThemeMode(false);
     }
-  }, [countdown, themeMode, hasAutoSubmitted]); // Trigger when countdown hits 0
-
+  }, [countdown, themeMode, hasAutoSubmitted]);
 
   const handleClear = () => {
     const canvas = canvasRef.current;
-  if (canvas) {
-    canvas.clear();
-    // Use the same colors as initialization
-    canvas.setBackgroundColor(darkMode ? '#222' : '#f0f0f0', () => {
-      canvas.renderAll();
-    });
-    // Reset brush settings
-    canvas.freeDrawingBrush.width = brushSize;
-    canvas.freeDrawingBrush.color = brushColor;
-  }
-  setPrediction("");
-  if (onClear) onClear();
+    if (canvas) {
+      canvas.clear();
+      canvas.setBackgroundColor(darkMode ? '#222' : '#f0f0f0', () => {
+        canvas.renderAll();
+      });
+      canvas.freeDrawingBrush.width = brushSize;
+      canvas.freeDrawingBrush.color = brushColor;
+    }
+    setPrediction("");
+    if (onClear) onClear();
   };
-
 
   const onNext = async () => {
     const canvas = canvasRef.current;
@@ -169,7 +211,6 @@ const CanvasTheme = ({ onClear }) => {
     const base64Image = canvas.getElement().toDataURL("image/png");
     handleClear();
 
-    // UI update
     setPendingSubmissions(prev => prev + 1);
     setIsProcessing(true);
 
@@ -201,24 +242,15 @@ const CanvasTheme = ({ onClear }) => {
   };
 
   const startGame = () => {
-
     setHasAutoSubmitted(false);
-
-    // 1. Cancel any pending submissions
     setPendingSubmissions(0);
     setIsProcessing(false);
     setThinking(false);
-
-    // 2. Reset all game states
     setDrawingResults([]);
     setTotalPoints(0);
     setSubmissionCount(0);
     setAutoSubmitted(false);
-
-    // 3. Clear the canvas
     handleClear();
-
-    // 4. Start new game countdown
     setPreGameCountdown(3);
     setShowOverlay(true);
 
@@ -230,7 +262,7 @@ const CanvasTheme = ({ onClear }) => {
           setShowOverlay(false);
           setThemeMode(true);
           setCurrentTheme(getRandomTheme());
-          setCountdown(30); // 30 second round
+          setCountdown(30);
           return null;
         }
         return prev - 1;
@@ -240,7 +272,6 @@ const CanvasTheme = ({ onClear }) => {
 
   useEffect(() => {
     return () => {
-      // Cancel any pending processes when component unmounts
       setPendingSubmissions(0);
       setIsProcessing(false);
       setThinking(false);
@@ -248,8 +279,7 @@ const CanvasTheme = ({ onClear }) => {
   }, []);
 
   return (
-    <div className={`canvas-container ${darkMode ? 'dark-mode' : ''}`}>
-      {/* Top scoreboard */}
+    <div className={`canvas-container theme-mode ${darkMode ? 'dark-mode' : ''} ${isMobile ? 'mobile' : ''}`}>
       <div className="scoreboard">
         {themeMode ? (
           <>
@@ -260,12 +290,12 @@ const CanvasTheme = ({ onClear }) => {
           <h2>🎮 Theme Challenge Mode</h2>
         )}
       </div>
+      
       <div className="canvas-flex">
-        {/* Left column: canvas + toolbar + start overlay */}
         <div className="canvas-column">
           <div className="canvas-wrapper">
-            <canvas ref={canvasEl} id="canvas" width={800} height={600} />
-
+            <canvas ref={canvasEl} id="canvas" />
+            
             {showOverlay && preGameCountdown !== null && (
               <div className="countdown-overlay">
                 <h1>{preGameCountdown}</h1>
@@ -284,12 +314,44 @@ const CanvasTheme = ({ onClear }) => {
           )}
         </div>
 
-        {/* Right column: results (always visible) */}
-        <div className={`results-side ${darkMode ? 'dark' : ''}`}>
+        {!isMobile && (
+          <div className={`results-side ${darkMode ? 'dark' : ''}`}>
+            <h3>🧠 Round Results</h3>
+            <p>Theme: <strong>{currentTheme}</strong></p>
+            
+            {isAutoSubmitting && (
+              <p className="processing-status">⏳ Analyzing your final drawing...</p>
+            )}
+            {(pendingSubmissions > 0 || thinking) && (
+              <p className="processing-status">
+                🔄 Processing {pendingSubmissions} drawing{pendingSubmissions !== 1 ? 's' : ''}...
+              </p>
+            )}
+
+            {drawingResults.length === 0 ? (
+              <p>No submissions yet.</p>
+            ) : (
+              <ul>
+                {drawingResults.map((entry, index) => (
+                  <li key={index} className={entry.isAutoSubmitted ? 'final-submission' : ''}>
+                    {index + 1}. {entry.result}
+                    {entry.match ? " ✅" : " ❌"}
+                    {entry.isAutoSubmitted && " (Final)"}
+                    {entry.result === "Unknown" && " - Couldn't analyze"}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p>Total Score: {totalPoints} points</p>
+          </div>
+        )}
+      </div>
+
+      {isMobile && (
+        <div className={`mobile-results-panel ${darkMode ? 'dark' : ''}`}>
           <h3>🧠 Round Results</h3>
           <p>Theme: <strong>{currentTheme}</strong></p>
-
-          {/* Show loading states */}
+          
           {isAutoSubmitting && (
             <p className="processing-status">⏳ Analyzing your final drawing...</p>
           )}
@@ -315,11 +377,9 @@ const CanvasTheme = ({ onClear }) => {
           )}
           <p>Total Score: {totalPoints} points</p>
         </div>
-      </div>
+      )}
     </div>
-
   );
-
 };
 
 export default CanvasTheme;
