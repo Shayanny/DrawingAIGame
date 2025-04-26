@@ -27,18 +27,23 @@ const Canvas = ({ onClear }) => {
   const getRandomThinkingMessage = () =>
     thinkingMessages[Math.floor(Math.random() * thinkingMessages.length)];
 
-  const { 
-    brushSize = 5, 
+  const {
+    brushSize = 5,
     brushColor = '#000000',
-    darkMode = false 
+    darkMode = false
   } = location.state || {};
 
 
   useEffect(() => {
+    const isMobile = window.innerWidth < 768; 
+    const canvasWidth = isMobile ? window.innerWidth * 0.9 : 800;
+    const canvasHeight = isMobile ? window.innerWidth * 0.9 * (600 / 800) : 600;
+    // Keep the aspect ratio as 800x600 on desktop
+
     const canvas = new fabric.Canvas(canvasEl.current, {
       isDrawingMode: true,
-      width: 800,
-      height: 600,
+      width: canvasWidth,
+      height: canvasHeight,
       backgroundColor: darkMode ? '#222' : '#f0f0f0',
     });
 
@@ -64,7 +69,7 @@ const Canvas = ({ onClear }) => {
       const base64Image = canvas.getElement().toDataURL("image/png");
       const endpoint = detailedMode ? '/analyze_image_detailed' : '/analyze_image';
 
-      const response = await fetch(`https://your-backend-name.onrender.com${endpoint}`, {
+      const response = await fetch(`https://drawingaibackend.onrender.com${endpoint}`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: base64Image }),
@@ -86,11 +91,11 @@ const Canvas = ({ onClear }) => {
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.clear();
-      
+
       canvas.setBackgroundColor(darkMode ? '#222' : '#f0f0f0', () => {
         canvas.renderAll();
       });
-      
+
       canvas.freeDrawingBrush.width = brushSize;
       canvas.freeDrawingBrush.color = brushColor;
     }

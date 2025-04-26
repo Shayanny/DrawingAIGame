@@ -94,3 +94,7 @@
 .detail-toggle.detailed:hover {
   background: #3367d6;
 }
+
+canvas {
+  touch-action: none; /* Allows smooth drawing on touch devices */
+}
